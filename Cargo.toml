@@ -1,0 +1,30 @@
+﻿[package]
+name = "zed-browser"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zed Browser Contributors"]
+description = "A minimalist cross-platform browser with Zed-like UI inspired by Zen Browser and Arc"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+wry = "0.24"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+env_logger = "0.11"
+egui = "0.27"
+egui-wgpu = "0.27"
+winit = "0.29"
+wgpu = "0.19"
+pollster = "0.3"
+raw-window-handle = "0.6"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
