@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zed Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #toolbar {
+            height: 48px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            height: 32px;
+            min-width: 32px;
+            padding: 0 10px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #30363d;
+            border-color: #484f58;
+        }
+
+        .btn:active:not(:disabled) {
+            background: #1c2128;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        #urlbar {
+            flex: 1;
+            height: 32px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 0 12px;
+            color: #c9d1d9;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        #urlbar:focus {
+            border-color: #58a6ff;
+            background: #0d1117;
+        }
+
+        #urlbar::placeholder {
+            color: #6e7681;
+        }
+
+        #webview-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #ffffff;
+        }
+
+        .tab-bar {
+            height: 32px;
+            background: #0d1117;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            gap: 2px;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .tab {
+            height: 28px;
+            min-width: 120px;
+            max-width: 240px;
+            padding: 0 12px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px 4px 0 0;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab.active {
+            background: #161b22;
+            border-bottom-color: #0d1117;
+            color: #c9d1d9;
+        }
+
+        .tab:hover:not(.active) {
+            background: #1c2128;
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s;
+            margin-left: auto;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab-close:hover {
+            background: #30363d;
+        }
+
+        .new-tab-btn {
+            height: 28px;
+            width: 28px;
+            min-width: 28px;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button class="btn" id="back" title="Back">←</button>
+        <button class="btn" id="forward" title="Forward">→</button>
+        <button class="btn" id="reload" title="Reload">↻</button>
+        <input type="text" id="urlbar" placeholder="Enter URL or search..." />
+        <button class="btn" id="new-tab" title="New Tab">+</button>
+    </div>
+    <div class="tab-bar" id="tab-bar"></div>
+    <div id="webview-container">
+        <webview id="webview" src="about:blank"></webview>
+    </div>
+
+    <script>
+        let currentTabId = 0;
+        let tabs = new Map();
+        
+        function createTab(url = 'about:blank') {
+            const tabId = currentTabId++;
+            const tab = {
+                id: tabId,
+                url: url,
+                title: 'New Tab',
+                webview: null
+            };
+            tabs.set(tabId, tab);
+            renderTabs();
+            switchToTab(tabId);
+            return tabId;
+        }
+
+        function renderTabs() {
+            const tabBar = document.getElementById('tab-bar');
+            tabBar.innerHTML = '';
+            
+            tabs.forEach((tab, id) => {
+                const tabEl = document.createElement('div');
+                tabEl.className = `tab ${id === currentTabId ? 'active' : ''}`;
+                tabEl.textContent = tab.title || 'New Tab';
+                tabEl.onclick = () => switchToTab(id);
+                
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'tab-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    closeTab(id);
+                };
+                tabEl.appendChild(closeBtn);
+                
+                tabBar.appendChild(tabEl);
+            });
+
+            const newTabBtn = document.createElement('button');
+            newTabBtn.className = 'btn new-tab-btn';
+            newTabBtn.textContent = '+';
+            newTabBtn.title = 'New Tab';
+            newTabBtn.onclick = () => createTab();
+            tabBar.appendChild(newTabBtn);
+        }
+
+        function switchToTab(tabId) {
+            if (!tabs.has(tabId)) return;
+            
+            currentTabId = tabId;
+            const tab = tabs.get(tabId);
+            const webview = document.getElementById('webview');
+            
+            webview.src = tab.url;
+            document.getElementById('urlbar').value = tab.url;
+            
+            renderTabs();
+            updateNavigationButtons();
+        }
+
+        function closeTab(tabId) {
+            if (tabs.size <= 1) return;
+            
+            tabs.delete(tabId);
+            
+            if (currentTabId === tabId) {
+                const firstTab = tabs.keys().next().value;
+                switchToTab(firstTab);
+            } else {
+                renderTabs();
+            }
+        }
+
+        function navigate(url) {
+            if (!url) return;
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
+                if (url.includes('.') && !url.includes(' ')) {
+                    url = 'https://' + url;
+                } else {
+                    url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+                }
+            }
+            
+            const tab = tabs.get(currentTabId);
+            if (tab) {
+                tab.url = url;
+                document.getElementById('webview').src = url;
+                document.getElementById('urlbar').value = url;
+            }
+        }
+
+        function updateNavigationButtons() {
+            const webview = document.getElementById('webview');
+            // Note: Actual back/forward requires webview API access
+            // This is a placeholder for the actual implementation
+        }
+
+        // Event listeners
+        document.getElementById('urlbar').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                navigate(e.target.value);
+            }
+        });
+
+        document.getElementById('urlbar').addEventListener('focus', (e) => {
+            e.target.select();
+        });
+
+        document.getElementById('back').onclick = () => {
+            const webview = document.getElementById('webview');
+            if (webview.canGoBack) webview.goBack();
+        };
+
+        document.getElementById('forward').onclick = () => {
+            const webview = document.getElementById('webview');
+            if (webview.canGoForward) webview.goForward();
+        };
+
+        document.getElementById('reload').onclick = () => {
+            document.getElementById('webview').reload();
+        };
+
+        document.getElementById('new-tab').onclick = () => createTab();
+
+        // Initialize
+        createTab('about:blank');
+    </script>
+</body>
+</html>
+

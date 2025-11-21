@@ -1,28 +1,24 @@
-﻿/// UI module for the Zed Browser
-/// Implements a minimalist, Zed-inspired interface with sidebar and main content area
+﻿/// Minimalist UI state - kept lightweight
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct UIState {
+    pub sidebar_visible: bool,
     pub sidebar_width: f32,
-    pub show_sidebar: bool,
-    pub current_url: String,
+    pub dark_mode: bool,
 }
 
 impl Default for UIState {
     fn default() -> Self {
         Self {
-            sidebar_width: 250.0,
-            show_sidebar: true,
-            current_url: String::from("https://www.example.com"),
+            sidebar_visible: false, // Hidden by default for minimalism
+            sidebar_width: 200.0,
+            dark_mode: true, // Dark mode by default
         }
     }
 }
 
-#[cfg(feature = "gui")]
-pub fn render_ui(state: &mut UIState) {
-    // This would use egui to render the full UI
-    // For now, it's a placeholder for the GUI implementation
-    println!(" Rendering UI with URL: {}", state.current_url);
+impl UIState {
+    pub fn toggle_sidebar(&mut self) {
+        self.sidebar_visible = !self.sidebar_visible;
+    }
 }

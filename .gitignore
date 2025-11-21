@@ -1,20 +1,24 @@
-﻿# Rust build artifacts
+﻿# Rust
 /target/
-/Cargo.lock
 **/*.rs.bk
+Cargo.lock
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+Thumbs.db
 
-# Dependencies
-Cargo.lock
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
 
-# Environment
-.env
-.env.local
+# Logs
 *.log
