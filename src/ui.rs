@@ -22,14 +22,17 @@ impl Default for UIState {
 }
 
 impl UIState {
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn toggle_sidebar(&mut self) {
         self.sidebar_visible = !self.sidebar_visible;
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn set_sidebar_visible(&mut self, visible: bool) {
         self.sidebar_visible = visible;
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).unwrap_or_else(|_| "{}".to_string())
     }

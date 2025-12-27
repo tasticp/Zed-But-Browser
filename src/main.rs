@@ -14,10 +14,10 @@ use wry::{
 };
 
 fn main() -> wry::Result<()> {
-    // Initialize browser state
-    let browser = Arc::new(Mutex::new(Browser::new()));
-    let bookmark_manager = Arc::new(Mutex::new(BookmarkManager::new()));
-    let ui_state = Arc::new(Mutex::new(UIState::default()));
+    // Initialize browser state (prepared for future IPC integration)
+    let _browser = Arc::new(Mutex::new(Browser::new()));
+    let _bookmark_manager = Arc::new(Mutex::new(BookmarkManager::new()));
+    let _ui_state = Arc::new(Mutex::new(UIState::default()));
     
     // Create event loop
     let event_loop = EventLoop::new();

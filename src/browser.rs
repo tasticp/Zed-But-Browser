@@ -26,6 +26,7 @@ impl Tab {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn navigate(&mut self, url: String) {
         // Truncate history if we're not at the end
         if self.history_index < self.history.len() - 1 {
@@ -43,14 +44,17 @@ impl Tab {
         self.url = url;
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn can_go_back(&self) -> bool {
         self.history_index > 0
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn can_go_forward(&self) -> bool {
         self.history_index < self.history.len() - 1
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn go_back(&mut self) -> Option<&str> {
         if self.can_go_back() {
             self.history_index -= 1;
@@ -61,6 +65,7 @@ impl Tab {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn go_forward(&mut self) -> Option<&str> {
         if self.can_go_forward() {
             self.history_index += 1;
@@ -75,7 +80,9 @@ impl Tab {
 /// Efficient browser state with minimal memory footprint
 pub struct Browser {
     tabs: Vec<Tab>,
+    #[allow(dead_code)] // Will be used when IPC is implemented
     active_tab_id: u32,
+    #[allow(dead_code)] // Will be used when IPC is implemented
     next_tab_id: u32,
 }
 
@@ -94,6 +101,7 @@ impl Browser {
         browser
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn add_tab(&mut self, url: String) -> u32 {
         let id = self.next_tab_id;
         self.next_tab_id += 1;
@@ -105,6 +113,7 @@ impl Browser {
         id
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn close_tab(&mut self, id: u32) -> bool {
         if self.tabs.len() <= 1 {
             return false; // Can't close the last tab
@@ -124,14 +133,17 @@ impl Browser {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn get_active_tab(&self) -> Option<&Tab> {
         self.tabs.iter().find(|t| t.id == self.active_tab_id)
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn get_active_tab_mut(&mut self) -> Option<&mut Tab> {
         self.tabs.iter_mut().find(|t| t.id == self.active_tab_id)
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn set_active_tab(&mut self, id: u32) -> bool {
         if self.tabs.iter().any(|t| t.id == id) {
             self.active_tab_id = id;
@@ -141,6 +153,7 @@ impl Browser {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn tab_count(&self) -> usize {
         self.tabs.len()
     }
@@ -215,14 +228,17 @@ impl BookmarkManager {
         self.folders.insert(folder.id.clone(), folder);
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn get_folder(&self, id: &str) -> Option<&BookmarkFolder> {
         self.folders.get(id)
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn get_all_folders(&self) -> Vec<&BookmarkFolder> {
         self.folders.values().collect()
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn add_bookmark(&mut self, folder_id: &str, bookmark: Bookmark) -> bool {
         if let Some(folder) = self.folders.get_mut(folder_id) {
             folder.bookmarks.push(bookmark);
@@ -232,6 +248,7 @@ impl BookmarkManager {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn remove_bookmark(&mut self, folder_id: &str, bookmark_url: &str) -> bool {
         if let Some(folder) = self.folders.get_mut(folder_id) {
             if let Some(pos) = folder.bookmarks.iter().position(|b| b.url == bookmark_url) {
@@ -245,6 +262,7 @@ impl BookmarkManager {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn toggle_folder(&mut self, folder_id: &str) -> bool {
         if let Some(folder) = self.folders.get_mut(folder_id) {
             folder.expanded = !folder.expanded;
@@ -254,6 +272,7 @@ impl BookmarkManager {
         }
     }
 
+    #[allow(dead_code)] // Part of API, will be used when IPC is implemented
     pub fn to_json(&self) -> String {
         let folders: Vec<&BookmarkFolder> = self.folders.values().collect();
         serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_string())
