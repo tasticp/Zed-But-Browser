@@ -1,15 +1,18 @@
 ﻿# Zed Browser - Lightweight & Minimalist
 
-A **GPL-3.0-licensed** ultra-lightweight, minimalist cross-platform web browser built with Rust. Designed for efficiency, minimal resource usage, and a clean, distraction-free experience.
+A **GPL-3.0-licensed** ultra-lightweight, minimalist cross-platform web browser built with Rust. Inspired by the **Zed editor's** clean UI/UX, featuring **Zen/Arc-style** sidebar organization and **Helium-like** minimalism. Designed for efficiency, minimal resource usage, and a distraction-free browsing experience.
 
 ## ✨ Features
 
+- **Zed-Inspired UI/UX** - Modern, minimal design with clean aesthetics and smooth interactions
+- **Sidebar with Folders** - Zen/Arc-style vertical sidebar with bookmark folder organization
 - **Ultra-lightweight** - Minimal dependencies, optimized binary size
-- **Minimalist UI** - Clean, dark-themed interface with essential controls only
+- **Minimalist Design** - Helium-inspired clean interface with essential controls only
 - **Efficient memory management** - Pre-allocated buffers, limited history, optimized data structures
-- **Cross-platform** - Windows, macOS, Linux support via system WebView
+- **Cross-platform** - Windows, macOS, Linux support via system WebView (Android/iOS planned)
 - **Fast startup** - Minimal initialization overhead
 - **Tab management** - Efficient tab system with history tracking
+- **Bookmark organization** - Folder-based bookmark management
 - **System WebView** - Uses native OS rendering engine (WKWebView/WebView2/WebKit)
 
 ## 🏗️ Architecture
@@ -39,10 +42,12 @@ zed-browser/
 ├── Cargo.toml          # Minimal dependencies
 ├── src/
 │   ├── main.rs         # Application entry & event loop
-│   ├── browser.rs      # Efficient browser core & tab management
-│   └── ui.rs           # Minimal UI state
+│   ├── browser.rs      # Efficient browser core, tab & bookmark management
+│   └── ui.rs           # UI state management
 ├── public/
-│   └── index.html      # Minimalist UI (~5KB HTML/CSS/JS)
+│   └── index.html      # Zed-inspired UI with sidebar (~15KB HTML/CSS/JS)
+├── LICENSE             # GPL-3.0 license
+├── LEGAL_CHECKLIST.md  # Legal compliance documentation
 └── README.md
 ```
 
@@ -117,13 +122,16 @@ cargo run
 
 ## 🎨 UI Design
 
-The UI is intentionally minimalist:
+The UI is inspired by **Zed editor**, **Zen Browser**, and **Helium**:
 
+- **Zed-inspired aesthetics** - Modern, clean design with smooth transitions and professional color scheme
 - **Dark theme** by default (reduces eye strain, saves battery on OLED)
+- **Sidebar with folders** - Zen/Arc-style vertical sidebar with collapsible bookmark folders
 - **Minimal toolbar** - Only essential controls (back, forward, reload, URL bar, new tab)
 - **Tab bar** - Compact tabs with close buttons on hover
-- **No sidebar** - Hidden by default (can be toggled if needed)
-- **No extensions UI** - Clean, distraction-free
+- **Bookmark organization** - Folder-based bookmark management in sidebar
+- **Keyboard shortcuts** - Efficient navigation (Ctrl+T for new tab, Ctrl+W to close, etc.)
+- **Responsive design** - Mobile-ready layout (Android/iOS support planned)
 
 ## 🔧 Configuration
 
@@ -184,24 +192,35 @@ This project is licensed under the GNU General Public License v3.0 or later.
 
 ## 🗺️ Roadmap
 
-### v0.2.0 (Current)
-- [x] Minimalist UI implementation
+### v0.3.0 (Current)
+- [x] Zed-inspired UI/UX design
+- [x] Sidebar with folder organization (Zen/Arc style)
+- [x] Bookmark management with folders
 - [x] Efficient tab management
 - [x] Navigation controls
 - [x] System WebView integration
-- [ ] Keyboard shortcuts
-- [ ] Bookmark management
+- [x] Keyboard shortcuts
+- [ ] Bookmark persistence (save/load from file)
+- [ ] Settings/preferences UI
 
-### v0.3.0
-- [ ] Settings/preferences
+### v0.4.0
 - [ ] History management
 - [ ] Download manager
 - [ ] Privacy controls
+- [ ] Search engine preferences
+- [ ] Theme customization
 
 ### v1.0.0
+- [ ] IPC communication between Rust and UI
+- [ ] Bookmark sync (local-first)
 - [ ] Extension API (minimal)
-- [ ] Sync capabilities
 - [ ] Advanced privacy features
+
+### v2.0.0 (Mobile)
+- [ ] Android support
+- [ ] iOS support
+- [ ] Mobile-optimized UI
+- [ ] Touch gestures
 
 ## 🤝 Contributing
 

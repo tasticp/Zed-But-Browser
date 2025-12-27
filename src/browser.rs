@@ -1,7 +1,7 @@
 ﻿/// Lightweight browser core with efficient memory management
 
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tab {
@@ -147,6 +147,120 @@ impl Browser {
 }
 
 impl Default for Browser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Bookmark structure for organizing favorites
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Bookmark {
+    pub name: String,
+    pub url: String,
+}
+
+/// Folder structure for organizing bookmarks
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BookmarkFolder {
+    pub id: String,
+    pub name: String,
+    pub expanded: bool,
+    pub bookmarks: Vec<Bookmark>,
+}
+
+/// Bookmark manager with folder organization
+pub struct BookmarkManager {
+    folders: HashMap<String, BookmarkFolder>,
+}
+
+impl BookmarkManager {
+    pub fn new() -> Self {
+        let mut manager = Self {
+            folders: HashMap::new(),
+        };
+        
+        // Initialize with default folders
+        manager.add_folder(BookmarkFolder {
+            id: "favorites".to_string(),
+            name: "Favorites".to_string(),
+            expanded: true,
+            bookmarks: vec![
+                Bookmark {
+                    name: "GitHub".to_string(),
+                    url: "https://github.com".to_string(),
+                },
+                Bookmark {
+                    name: "Zed Editor".to_string(),
+                    url: "https://zed.dev".to_string(),
+                },
+            ],
+        });
+        
+        manager.add_folder(BookmarkFolder {
+            id: "work".to_string(),
+            name: "Work".to_string(),
+            expanded: false,
+            bookmarks: vec![
+                Bookmark {
+                    name: "Stack Overflow".to_string(),
+                    url: "https://stackoverflow.com".to_string(),
+                },
+            ],
+        });
+        
+        manager
+    }
+
+    pub fn add_folder(&mut self, folder: BookmarkFolder) {
+        self.folders.insert(folder.id.clone(), folder);
+    }
+
+    pub fn get_folder(&self, id: &str) -> Option<&BookmarkFolder> {
+        self.folders.get(id)
+    }
+
+    pub fn get_all_folders(&self) -> Vec<&BookmarkFolder> {
+        self.folders.values().collect()
+    }
+
+    pub fn add_bookmark(&mut self, folder_id: &str, bookmark: Bookmark) -> bool {
+        if let Some(folder) = self.folders.get_mut(folder_id) {
+            folder.bookmarks.push(bookmark);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn remove_bookmark(&mut self, folder_id: &str, bookmark_url: &str) -> bool {
+        if let Some(folder) = self.folders.get_mut(folder_id) {
+            if let Some(pos) = folder.bookmarks.iter().position(|b| b.url == bookmark_url) {
+                folder.bookmarks.remove(pos);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    pub fn toggle_folder(&mut self, folder_id: &str) -> bool {
+        if let Some(folder) = self.folders.get_mut(folder_id) {
+            folder.expanded = !folder.expanded;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn to_json(&self) -> String {
+        let folders: Vec<&BookmarkFolder> = self.folders.values().collect();
+        serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_string())
+    }
+}
+
+impl Default for BookmarkManager {
     fn default() -> Self {
         Self::new()
     }

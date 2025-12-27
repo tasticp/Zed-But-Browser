@@ -11,96 +11,244 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-hover: #1c2128;
+            --border: #30363d;
+            --border-hover: #484f58;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --sidebar-width: 240px;
+            --toolbar-height: 40px;
+            --tab-height: 32px;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0d1117;
-            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             overflow: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            font-size: 13px;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Top Toolbar - Zed-inspired minimal design */
         #toolbar {
-            height: 48px;
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
+            height: var(--toolbar-height);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            padding: 0 8px;
-            gap: 6px;
+            padding: 0 12px;
+            gap: 8px;
             flex-shrink: 0;
+            z-index: 100;
         }
 
         .btn {
-            height: 32px;
-            min-width: 32px;
-            padding: 0 10px;
-            background: #21262d;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            color: #c9d1d9;
+            height: 28px;
+            min-width: 28px;
+            padding: 0 8px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: var(--text-secondary);
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s ease;
+            font-family: inherit;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn:active:not(:disabled) {
+            background: var(--bg-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-icon {
+            width: 16px;
+            height: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .btn:hover:not(:disabled) {
-            background: #30363d;
-            border-color: #484f58;
-        }
-
-        .btn:active:not(:disabled) {
-            background: #1c2128;
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
         #urlbar {
             flex: 1;
-            height: 32px;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 0 12px;
-            color: #c9d1d9;
+            height: 28px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0 10px;
+            color: var(--text-primary);
             font-size: 13px;
             outline: none;
-            transition: border-color 0.15s;
+            transition: all 0.12s ease;
+            font-family: inherit;
         }
 
         #urlbar:focus {
-            border-color: #58a6ff;
-            background: #0d1117;
+            border-color: var(--accent);
+            background: var(--bg-secondary);
         }
 
         #urlbar::placeholder {
-            color: #6e7681;
+            color: var(--text-muted);
         }
 
-        #webview-container {
+        /* Main Layout */
+        #main-container {
             flex: 1;
+            display: flex;
+            overflow: hidden;
             position: relative;
+        }
+
+        /* Sidebar - Zen/Arc style with folders */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
             overflow: hidden;
         }
 
-        webview {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #ffffff;
+        #sidebar.hidden {
+            transform: translateX(calc(-1 * var(--sidebar-width)));
+            width: 0;
+            border-right: none;
         }
 
+        .sidebar-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 8px;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: var(--border);
+        }
+
+        /* Folder/Bookmark Tree */
+        .folder-item, .bookmark-item {
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+            user-select: none;
+            transition: background 0.12s ease;
+        }
+
+        .folder-item:hover, .bookmark-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .folder-item.expanded > .folder-icon::before {
+            transform: rotate(90deg);
+        }
+
+        .folder-icon, .bookmark-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--text-muted);
+        }
+
+        .folder-icon::before {
+            content: '▶';
+            font-size: 10px;
+            transition: transform 0.15s ease;
+        }
+
+        .bookmark-icon::before {
+            content: '●';
+            font-size: 8px;
+        }
+
+        .folder-name, .bookmark-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .folder-children {
+            margin-left: 20px;
+            margin-top: 2px;
+            display: none;
+        }
+
+        .folder-item.expanded + .folder-children,
+        .folder-item.expanded ~ .folder-children {
+            display: block;
+        }
+
+        /* Tab Bar */
         .tab-bar {
-            height: 32px;
-            background: #0d1117;
-            border-bottom: 1px solid #30363d;
+            height: var(--tab-height);
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             padding: 0 4px;
@@ -109,34 +257,51 @@
             flex-shrink: 0;
         }
 
+        .tab-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tab-bar::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+        }
+
         .tab {
             height: 28px;
             min-width: 120px;
             max-width: 240px;
             padding: 0 12px;
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
             border-radius: 4px 4px 0 0;
-            color: #8b949e;
+            color: var(--text-secondary);
             cursor: pointer;
             font-size: 12px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            transition: all 0.15s;
+            gap: 8px;
+            transition: all 0.12s ease;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
+            position: relative;
         }
 
         .tab.active {
-            background: #161b22;
-            border-bottom-color: #0d1117;
-            color: #c9d1d9;
+            background: var(--bg-primary);
+            border-bottom-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border);
         }
 
         .tab:hover:not(.active) {
-            background: #1c2128;
+            background: var(--bg-tertiary);
+        }
+
+        .tab-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .tab-close {
@@ -147,8 +312,9 @@
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.15s;
-            margin-left: auto;
+            transition: opacity 0.12s ease;
+            flex-shrink: 0;
+            color: var(--text-muted);
         }
 
         .tab:hover .tab-close {
@@ -156,41 +322,223 @@
         }
 
         .tab-close:hover {
-            background: #30363d;
+            background: var(--bg-hover);
+            color: var(--text-primary);
         }
 
+        /* WebView Container */
+        #webview-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-primary);
+        }
+
+        webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #ffffff;
+        }
+
+        /* Toggle Sidebar Button */
+        #toggle-sidebar {
+            margin-right: 4px;
+        }
+
+        /* New Tab Button */
         .new-tab-btn {
             height: 28px;
             width: 28px;
             min-width: 28px;
             padding: 0;
         }
+
+        /* Loading Indicator */
+        .loading {
+            opacity: 0.6;
+        }
+
+        /* Responsive - Mobile */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+
+            #sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+            }
+
+            #sidebar.hidden {
+                transform: translateX(-100%);
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Top Toolbar -->
     <div id="toolbar">
-        <button class="btn" id="back" title="Back">←</button>
-        <button class="btn" id="forward" title="Forward">→</button>
-        <button class="btn" id="reload" title="Reload">↻</button>
-        <input type="text" id="urlbar" placeholder="Enter URL or search..." />
-        <button class="btn" id="new-tab" title="New Tab">+</button>
+        <button class="btn" id="toggle-sidebar" title="Toggle Sidebar">
+            <span class="btn-icon">☰</span>
+        </button>
+        <button class="btn" id="back" title="Back (Alt+Left)">
+            <span class="btn-icon">←</span>
+        </button>
+        <button class="btn" id="forward" title="Forward (Alt+Right)">
+            <span class="btn-icon">→</span>
+        </button>
+        <button class="btn" id="reload" title="Reload (Ctrl+R)">
+            <span class="btn-icon">↻</span>
+        </button>
+        <input type="text" id="urlbar" placeholder="Search or enter URL..." autocomplete="off" />
+        <button class="btn" id="new-tab" title="New Tab (Ctrl+T)">
+            <span class="btn-icon">+</span>
+        </button>
     </div>
-    <div class="tab-bar" id="tab-bar"></div>
-    <div id="webview-container">
-        <webview id="webview" src="about:blank"></webview>
+
+    <!-- Main Container -->
+    <div id="main-container">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Bookmarks</div>
+            </div>
+            <div class="sidebar-content" id="sidebar-content">
+                <!-- Folders and bookmarks will be dynamically inserted here -->
+                <div class="folder-item" data-folder="favorites">
+                    <div class="folder-icon"></div>
+                    <div class="folder-name">Favorites</div>
+                </div>
+                <div class="folder-children">
+                    <div class="bookmark-item" data-url="https://github.com">
+                        <div class="bookmark-icon"></div>
+                        <div class="bookmark-name">GitHub</div>
+                    </div>
+                    <div class="bookmark-item" data-url="https://zed.dev">
+                        <div class="bookmark-icon"></div>
+                        <div class="bookmark-name">Zed Editor</div>
+                    </div>
+                </div>
+                <div class="folder-item" data-folder="work">
+                    <div class="folder-icon"></div>
+                    <div class="folder-name">Work</div>
+                </div>
+                <div class="folder-children">
+                    <div class="bookmark-item" data-url="https://stackoverflow.com">
+                        <div class="bookmark-icon"></div>
+                        <div class="bookmark-name">Stack Overflow</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <!-- Tab Bar -->
+            <div class="tab-bar" id="tab-bar"></div>
+            
+            <!-- WebView Container -->
+            <div id="webview-container">
+                <webview id="webview" src="about:blank"></webview>
+            </div>
+        </div>
     </div>
 
     <script>
+        // State management
         let currentTabId = 0;
         let tabs = new Map();
-        
+        let sidebarVisible = true;
+        let bookmarks = {
+            folders: [
+                {
+                    id: 'favorites',
+                    name: 'Favorites',
+                    expanded: true,
+                    bookmarks: [
+                        { name: 'GitHub', url: 'https://github.com' },
+                        { name: 'Zed Editor', url: 'https://zed.dev' }
+                    ]
+                },
+                {
+                    id: 'work',
+                    name: 'Work',
+                    expanded: false,
+                    bookmarks: [
+                        { name: 'Stack Overflow', url: 'https://stackoverflow.com' }
+                    ]
+                }
+            ]
+        };
+
+        // Initialize
+        function init() {
+            createTab('about:blank');
+            renderSidebar();
+            setupEventListeners();
+        }
+
+        // Sidebar Management
+        function toggleSidebar() {
+            sidebarVisible = !sidebarVisible;
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden', !sidebarVisible);
+        }
+
+        function renderSidebar() {
+            const content = document.getElementById('sidebar-content');
+            content.innerHTML = '';
+
+            bookmarks.folders.forEach(folder => {
+                const folderEl = document.createElement('div');
+                folderEl.className = `folder-item ${folder.expanded ? 'expanded' : ''}`;
+                folderEl.dataset.folder = folder.id;
+                folderEl.innerHTML = `
+                    <div class="folder-icon"></div>
+                    <div class="folder-name">${escapeHtml(folder.name)}</div>
+                `;
+                folderEl.onclick = (e) => {
+                    if (e.target.closest('.folder-item')) {
+                        folder.expanded = !folder.expanded;
+                        renderSidebar();
+                    }
+                };
+                content.appendChild(folderEl);
+
+                if (folder.expanded && folder.bookmarks) {
+                    const childrenEl = document.createElement('div');
+                    childrenEl.className = 'folder-children';
+                    folder.bookmarks.forEach(bookmark => {
+                        const bookmarkEl = document.createElement('div');
+                        bookmarkEl.className = 'bookmark-item';
+                        bookmarkEl.dataset.url = bookmark.url;
+                        bookmarkEl.innerHTML = `
+                            <div class="bookmark-icon"></div>
+                            <div class="bookmark-name">${escapeHtml(bookmark.name)}</div>
+                        `;
+                        bookmarkEl.onclick = () => {
+                            navigate(bookmark.url);
+                        };
+                        childrenEl.appendChild(bookmarkEl);
+                    });
+                    content.appendChild(childrenEl);
+                }
+            });
+        }
+
+        // Tab Management
         function createTab(url = 'about:blank') {
             const tabId = currentTabId++;
             const tab = {
                 id: tabId,
                 url: url,
                 title: 'New Tab',
-                webview: null
+                loading: false
             };
             tabs.set(tabId, tab);
             renderTabs();
@@ -204,25 +552,25 @@
             
             tabs.forEach((tab, id) => {
                 const tabEl = document.createElement('div');
-                tabEl.className = `tab ${id === currentTabId ? 'active' : ''}`;
-                tabEl.textContent = tab.title || 'New Tab';
-                tabEl.onclick = () => switchToTab(id);
-                
-                const closeBtn = document.createElement('span');
-                closeBtn.className = 'tab-close';
-                closeBtn.innerHTML = '×';
-                closeBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    closeTab(id);
+                tabEl.className = `tab ${id === currentTabId ? 'active' : ''} ${tab.loading ? 'loading' : ''}`;
+                tabEl.innerHTML = `
+                    <div class="tab-title">${escapeHtml(tab.title || 'New Tab')}</div>
+                    <div class="tab-close" title="Close Tab">×</div>
+                `;
+                tabEl.onclick = (e) => {
+                    if (e.target.closest('.tab-close')) {
+                        e.stopPropagation();
+                        closeTab(id);
+                    } else {
+                        switchToTab(id);
+                    }
                 };
-                tabEl.appendChild(closeBtn);
-                
                 tabBar.appendChild(tabEl);
             });
 
             const newTabBtn = document.createElement('button');
             newTabBtn.className = 'btn new-tab-btn';
-            newTabBtn.textContent = '+';
+            newTabBtn.innerHTML = '<span class="btn-icon">+</span>';
             newTabBtn.title = 'New Tab';
             newTabBtn.onclick = () => createTab();
             tabBar.appendChild(newTabBtn);
@@ -235,7 +583,9 @@
             const tab = tabs.get(tabId);
             const webview = document.getElementById('webview');
             
-            webview.src = tab.url;
+            if (webview.src !== tab.url) {
+                webview.src = tab.url;
+            }
             document.getElementById('urlbar').value = tab.url;
             
             renderTabs();
@@ -255,9 +605,11 @@
             }
         }
 
+        // Navigation
         function navigate(url) {
             if (!url) return;
             
+            // Normalize URL
             if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
                 if (url.includes('.') && !url.includes(' ')) {
                     url = 'https://' + url;
@@ -269,47 +621,114 @@
             const tab = tabs.get(currentTabId);
             if (tab) {
                 tab.url = url;
+                tab.loading = true;
                 document.getElementById('webview').src = url;
                 document.getElementById('urlbar').value = url;
+                renderTabs();
             }
         }
 
         function updateNavigationButtons() {
             const webview = document.getElementById('webview');
-            // Note: Actual back/forward requires webview API access
-            // This is a placeholder for the actual implementation
+            const backBtn = document.getElementById('back');
+            const forwardBtn = document.getElementById('forward');
+            
+            // Note: Actual implementation requires webview API
+            // This is a placeholder
+            if (webview.canGoBack !== undefined) {
+                backBtn.disabled = !webview.canGoBack;
+            }
+            if (webview.canGoForward !== undefined) {
+                forwardBtn.disabled = !webview.canGoForward;
+            }
         }
 
-        // Event listeners
-        document.getElementById('urlbar').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                navigate(e.target.value);
-            }
-        });
+        // Event Listeners
+        function setupEventListeners() {
+            // Toolbar buttons
+            document.getElementById('toggle-sidebar').onclick = toggleSidebar;
+            document.getElementById('back').onclick = () => {
+                const webview = document.getElementById('webview');
+                if (webview.canGoBack) webview.goBack();
+            };
+            document.getElementById('forward').onclick = () => {
+                const webview = document.getElementById('webview');
+                if (webview.canGoForward) webview.goForward();
+            };
+            document.getElementById('reload').onclick = () => {
+                document.getElementById('webview').reload();
+            };
+            document.getElementById('new-tab').onclick = () => createTab();
 
-        document.getElementById('urlbar').addEventListener('focus', (e) => {
-            e.target.select();
-        });
+            // URL bar
+            const urlbar = document.getElementById('urlbar');
+            urlbar.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    navigate(e.target.value);
+                }
+            });
+            urlbar.addEventListener('focus', (e) => {
+                e.target.select();
+            });
 
-        document.getElementById('back').onclick = () => {
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 't') {
+                        e.preventDefault();
+                        createTab();
+                    } else if (e.key === 'w') {
+                        e.preventDefault();
+                        closeTab(currentTabId);
+                    } else if (e.key === 'r') {
+                        e.preventDefault();
+                        document.getElementById('webview').reload();
+                    } else if (e.key === 'l') {
+                        e.preventDefault();
+                        urlbar.focus();
+                    }
+                } else if (e.altKey) {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        document.getElementById('back').click();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        document.getElementById('forward').click();
+                    }
+                }
+            });
+
+            // WebView events
             const webview = document.getElementById('webview');
-            if (webview.canGoBack) webview.goBack();
-        };
+            webview.addEventListener('did-start-loading', () => {
+                const tab = tabs.get(currentTabId);
+                if (tab) {
+                    tab.loading = true;
+                    renderTabs();
+                }
+            });
+            webview.addEventListener('did-stop-loading', () => {
+                const tab = tabs.get(currentTabId);
+                if (tab) {
+                    tab.loading = false;
+                    tab.url = webview.src;
+                    tab.title = webview.title || 'New Tab';
+                    document.getElementById('urlbar').value = tab.url;
+                    renderTabs();
+                    updateNavigationButtons();
+                }
+            });
+        }
 
-        document.getElementById('forward').onclick = () => {
-            const webview = document.getElementById('webview');
-            if (webview.canGoForward) webview.goForward();
-        };
+        // Utility
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        document.getElementById('reload').onclick = () => {
-            document.getElementById('webview').reload();
-        };
-
-        document.getElementById('new-tab').onclick = () => createTab();
-
-        // Initialize
-        createTab('about:blank');
+        // Initialize on load
+        init();
     </script>
 </body>
 </html>
-

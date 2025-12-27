@@ -1,8 +1,9 @@
 ﻿mod browser;
 mod ui;
 
-use browser::Browser;
-use std::path::PathBuf;
+use browser::{Browser, BookmarkManager};
+use ui::UIState;
+use std::sync::{Arc, Mutex};
 use wry::{
     application::{
         event::{Event, WindowEvent},
@@ -14,7 +15,9 @@ use wry::{
 
 fn main() -> wry::Result<()> {
     // Initialize browser state
-    let _browser = Browser::new();
+    let browser = Arc::new(Mutex::new(Browser::new()));
+    let bookmark_manager = Arc::new(Mutex::new(BookmarkManager::new()));
+    let ui_state = Arc::new(Mutex::new(UIState::default()));
     
     // Create event loop
     let event_loop = EventLoop::new();
@@ -22,14 +25,15 @@ fn main() -> wry::Result<()> {
     // Get HTML file path
     let html_path = get_html_path();
     
-    // Create window with minimal configuration
+    // Create window with Zed-inspired minimal configuration
     let window = WindowBuilder::new()
         .with_title("Zed Browser")
-        .with_inner_size(wry::application::dpi::LogicalSize::new(1280, 720))
+        .with_inner_size(wry::application::dpi::LogicalSize::new(1400, 900))
         .with_min_inner_size(wry::application::dpi::LogicalSize::new(800, 600))
         .build(&event_loop)?;
 
     // Create webview
+    // Note: IPC integration can be added later using wry's custom protocol or message passing
     let _webview = WebViewBuilder::new(window)?
         .with_url(&html_path)?
         .with_devtools(true)
