@@ -1,242 +1,101 @@
-﻿# Zed Browser - Lightweight & Minimalist
+﻿# Zed Browser
 
-A **GPL-3.0-licensed** ultra-lightweight, minimalist cross-platform web browser built with Rust. Inspired by the **Zed editor's** clean UI/UX, featuring **Zen/Arc-style** sidebar organization and **Helium-like** minimalism. Designed for efficiency, minimal resource usage, and a distraction-free browsing experience.
+A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. Choose your preferred browser engine identity and enjoy built-in ad blocking similar to uBlock Origin.
 
-## ✨ Features
+## Features
 
 - **Zed-Inspired UI/UX** - Modern, minimal design with clean aesthetics and smooth interactions
-- **Sidebar with Folders** - Zen/Arc-style vertical sidebar with bookmark folder organization
-- **Ultra-lightweight** - Minimal dependencies, optimized binary size
+- **Sidebar with Folders** - Zen/Arc-style vertical sidebar with bookmark folder organization (coming soon)
+- **Ultra-lightweight** - Built with Rust/Tauri, uses system WebView (WKWebView/WebView2/WebKit) - no bundled Chromium!
 - **Minimalist Design** - Helium-inspired clean interface with essential controls only
-- **Efficient memory management** - Pre-allocated buffers, limited history, optimized data structures
-- **Cross-platform** - Windows, macOS, Linux support via system WebView (Android/iOS planned)
-- **Fast startup** - Minimal initialization overhead
-- **Tab management** - Efficient tab system with history tracking
-- **Bookmark organization** - Folder-based bookmark management
-- **System WebView** - Uses native OS rendering engine (WKWebView/WebView2/WebKit)
+- **Efficient memory management** - Rust backend ensures minimal memory footprint
+- **Cross-platform** - Windows, macOS, Linux support via system WebView
+- **Fast startup** - Minimal initialization overhead, native performance
+- **Tab management** - Efficient tab system with history tracking (coming soon)
+- **Bookmark organization** - Folder-based bookmark management (coming soon)
+- **System WebView** - Uses native OS rendering engine (WKWebView on macOS, WebView2 on Windows, WebKit on Linux)
+- 🎯 **Customizable Browser Engine Identity**: Choose between Chromium, Firefox (Gecko), WebKit, or Microsoft Edge user agents
+- 🛡️ **Built-in Ad Blocking**: uBlock-like ad blocking that blocks ads, trackers, and malicious content
+- ⚙️ **Easy Settings**: Change your browser engine identity anytime from the settings panel
 
-## 🏗️ Architecture
+## Why Rust/Tauri Instead of Electron?
 
-### Technology Stack
+Unlike Electron (which VSCode uses and can be slow), Zed Browser uses:
+- **Tauri**: Rust-based framework that's 10-100x smaller than Electron
+- **System WebView**: Uses your OS's native web rendering engine instead of bundling Chromium
+- **Native Performance**: Rust backend ensures fast, efficient operations
+- **Smaller Binaries**: Typical app size is 5-15MB vs Electron's 100-200MB+
+- **Lower Memory Usage**: Shares system WebView instead of running separate Chromium instances
 
-- **Core:** Pure Rust (no JavaScript runtime overhead)
-- **WebView:** wry (lightweight cross-platform webview wrapper)
-- **UI:** Minimal HTML/CSS (no frameworks, ~5KB total)
-- **Serialization:** serde/serde_json (only when needed)
-
-### Why This is More Efficient
-
-Compared to typical browser projects:
-
-1. **No JavaScript runtime** - Pure Rust backend eliminates JS overhead
-2. **Minimal dependencies** - Only 3 core dependencies (wry, serde, serde_json)
-3. **Optimized builds** - Size-optimized release builds (`opt-level = "z"`, LTO, strip)
-4. **Efficient data structures** - VecDeque for history, pre-allocated vectors
-5. **No heavy UI frameworks** - Minimal HTML/CSS instead of React/Vue/Angular
-6. **System WebView** - Leverages OS-provided engines (no bundled Chromium)
-
-### Project Structure
-
-```
-zed-browser/
-├── Cargo.toml          # Minimal dependencies
-├── src/
-│   ├── main.rs         # Application entry & event loop
-│   ├── browser.rs      # Efficient browser core, tab & bookmark management
-│   └── ui.rs           # UI state management
-├── public/
-│   └── index.html      # Zed-inspired UI with sidebar (~15KB HTML/CSS/JS)
-├── LICENSE             # GPL-3.0 license
-├── LEGAL_CHECKLIST.md  # Legal compliance documentation
-└── README.md
-```
-
-## 📦 Installation & Building
+## Installation
 
 ### Prerequisites
 
-- **Rust 1.70+** ([Install](https://rustup.rs/))
-- **Cargo** (included with Rust)
+- **Rust**: Install from [rustup.rs](https://rustup.rs/)
+- **System WebView**:
+  - **Windows**: WebView2 (usually pre-installed with Windows 11, or install from Microsoft)
+  - **macOS**: WKWebView (built-in)
+  - **Linux**: WebKitGTK (install via package manager)
 
-### Platform-Specific Requirements
+### Build from Source
 
-#### macOS
+1. Install dependencies:
 ```bash
-# No additional dependencies needed
-# WKWebView is built-in
+bun install
 ```
 
-#### Windows
+2. Run in development mode:
 ```bash
-# Requires Visual Studio Build Tools or MSVC toolchain
-# WebView2 runtime is bundled with Windows 11 or available separately
+bun run dev
 ```
 
-#### Linux
+3. Build for production:
 ```bash
-# Install WebKit2 development files:
-sudo apt-get install libwebkit2gtk-4.1-dev  # Debian/Ubuntu
-# or
-sudo dnf install webkit2-gtk3-devel         # Fedora
+bun run build
 ```
 
-### Building
+## Why "Microsoft Edge" Appears
 
-```bash
-# Clone the repository
-git clone https://github.com/tasticp/Zed-But-Browser.git
-cd Zed-But-Browser
+When you see "Microsoft Edge" in error pages or browser detection, it's because:
 
-# Build in release mode (optimized for size)
-cargo build --release
+1. **System WebView on Windows**: Windows uses WebView2, which is based on Edge's Chromium engine
+2. **User Agent**: By default, WebView2 may identify as Edge
+3. **Solution**: You can change this through the onboarding flow or settings panel to use a different browser engine's user agent string
 
-# The binary will be at: target/release/zed-browser
-```
+The onboarding flow lets you choose which browser engine identity you want to use, and you can change it anytime from the settings panel (⚙ button in the toolbar).
 
-### Running
+## Browser Engine Identities
 
-```bash
-# Development (with debug symbols)
-cargo run
+- **Chromium**: Fast and modern, used by Chrome and Edge
+- **Firefox (Gecko)**: Privacy-focused, used by Firefox
+- **WebKit**: Lightweight, used by Safari
+- **Microsoft Edge**: Microsoft Edge engine
 
-# Release (optimized, stripped)
-./target/release/zed-browser
-# or on Windows:
-.\target\release\zed-browser.exe
-```
+Note: These are user agent strings that change how websites identify your browser. The actual rendering engine depends on your OS (WebView2 on Windows, WKWebView on macOS, WebKit on Linux).
 
-## 🚀 Performance
+## Ad Blocking
 
-### Binary Size
-- **Release build:** ~2-5MB (depending on platform)
-- **Stripped:** Even smaller with `strip = true`
+The built-in ad blocker blocks:
+- Common ad domains and patterns
+- Tracking scripts and pixels
+- Malicious content
+- Analytics trackers
 
-### Memory Usage
-- **Idle:** ~30-50MB (system WebView overhead)
-- **Per tab:** ~10-20MB additional
-- **History:** Limited to 100 entries per tab (configurable)
+You can enable or disable ad blocking from the settings panel at any time.
 
-### Startup Time
-- **Cold start:** <100ms (Rust initialization)
-- **WebView ready:** <500ms (OS-dependent)
+## Development
 
-## 🎨 UI Design
+- `bun run dev` - Start development server with hot reload
+- `bun run build` - Build the production application
+- `bun run tauri` - Run Tauri CLI commands
 
-The UI is inspired by **Zed editor**, **Zen Browser**, and **Helium**:
+## Architecture
 
-- **Zed-inspired aesthetics** - Modern, clean design with smooth transitions and professional color scheme
-- **Dark theme** by default (reduces eye strain, saves battery on OLED)
-- **Sidebar with folders** - Zen/Arc-style vertical sidebar with collapsible bookmark folders
-- **Minimal toolbar** - Only essential controls (back, forward, reload, URL bar, new tab)
-- **Tab bar** - Compact tabs with close buttons on hover
-- **Bookmark organization** - Folder-based bookmark management in sidebar
-- **Keyboard shortcuts** - Efficient navigation (Ctrl+T for new tab, Ctrl+W to close, etc.)
-- **Responsive design** - Mobile-ready layout (Android/iOS support planned)
+- **Frontend**: HTML/CSS/JavaScript (in `public/`)
+- **Backend**: Rust (in `src-tauri/src/`)
+- **Framework**: Tauri 1.5
+- **Storage**: JSON-based config file in app data directory
 
-## 🔧 Configuration
+## License
 
-Currently, the browser uses sensible defaults. Future versions may include:
-
-- Config file for preferences
-- Custom themes
-- Keyboard shortcuts
-- Privacy settings
-
-## 📊 Comparison with Other Browsers
-
-| Feature | Zed Browser | Typical Electron Browser | Reference Project |
-|---------|-------------|-------------------------|-------------------|
-| Dependencies | 3 (wry, serde, serde_json) | 100+ (Node.js, Chromium, etc.) | React, TypeScript, WebAssembly |
-| Binary Size | ~2-5MB | ~100-200MB | ~50-100MB |
-| Memory (idle) | ~30-50MB | ~200-500MB | ~100-200MB |
-| Startup Time | <100ms | 1-3s | 500ms-1s |
-| UI Framework | Minimal HTML/CSS | Electron/Chromium | React + shadcn-ui |
-| Language | Pure Rust | JavaScript/TypeScript | Rust + TypeScript |
-
-## 🛠️ Development
-
-### Code Quality
-
-```bash
-# Format code
-cargo fmt
-
-# Lint code
-cargo clippy
-
-# Run tests
-cargo test
-
-# Check for issues
-cargo check
-```
-
-### Debugging
-
-```bash
-# Run with logging (if implemented)
-RUST_LOG=debug cargo run
-```
-
-## 📝 License
-
-**GPL-3.0-or-later**
-
-This project is licensed under the GNU General Public License v3.0 or later.
-
-### Third-Party Licenses
-
-- **wry:** Apache-2.0 or MIT
-- **serde:** MIT or Apache-2.0
-- **System WebViews:** Chromium/WebKit (see respective projects)
-
-## 🗺️ Roadmap
-
-### v0.3.0 (Current)
-- [x] Zed-inspired UI/UX design
-- [x] Sidebar with folder organization (Zen/Arc style)
-- [x] Bookmark management with folders
-- [x] Efficient tab management
-- [x] Navigation controls
-- [x] System WebView integration
-- [x] Keyboard shortcuts
-- [ ] Bookmark persistence (save/load from file)
-- [ ] Settings/preferences UI
-
-### v0.4.0
-- [ ] History management
-- [ ] Download manager
-- [ ] Privacy controls
-- [ ] Search engine preferences
-- [ ] Theme customization
-
-### v1.0.0
-- [ ] IPC communication between Rust and UI
-- [ ] Bookmark sync (local-first)
-- [ ] Extension API (minimal)
-- [ ] Advanced privacy features
-
-### v2.0.0 (Mobile)
-- [ ] Android support
-- [ ] iOS support
-- [ ] Mobile-optimized UI
-- [ ] Touch gestures
-
-## 🤝 Contributing
-
-Contributions welcome! Please ensure:
-
-- Code follows Rust best practices
-- Maintains minimal dependency footprint
-- Keeps UI minimalist and efficient
-- All contributions must be GPL-3.0 compatible
-
-## ⚠️ Status
-
-**Alpha (v0.2.0)** - Not production-ready. Use at your own risk.
-
-This is a lightweight, experimental browser. For production use, consider more mature alternatives.
-
----
-
-**Built with ❤️ and Rust** - For those who value simplicity and efficiency.
+MIT

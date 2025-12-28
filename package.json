@@ -1,0 +1,18 @@
+{
+  "name": "zed-browser",
+  "version": "1.0.0",
+  "description": "A modern, lightweight browser with customizable engine selection and built-in ad blocking",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "keywords": ["browser", "tauri", "rust", "ad-blocker", "webview"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/api": "^1.5.0"
+  },
+  "dependencies": {}
+}
