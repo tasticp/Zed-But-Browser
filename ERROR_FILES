@@ -1,0 +1,57 @@
+   Compiling zed-browser v1.0.0 (C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri)
+error: failed to run custom build command for `zed-browser v1.0.0 (C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri\target\debug\build\zed-browser-3d8e0df4fd0ca2e9\build-script-build` (exit code: 1)
+  --- stdout
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rerun-if-changed=tauri.conf.json
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  unknown field `app`, expected one of `$schema`, `package`, `tauri`, `build`, `plugins`
+  found an unknown configuration field. This usually means that you are using a CLI version that is newer than `tauri-build` and is incompatible. Please try updating the Rust crates by running `cargo update` in the Tauri app folder.
+warning: build failed, waiting for other jobs to finish...
+error: script "dev" exited with code 101
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser>cd src-tauri
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri>cargo update
+    Updating crates.io index
+     Locking 0 packages to latest compatible versions
+note: pass `--verbose` to see 3 unchanged dependencies behind latest
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri>cd ..
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser>bun install
+bun install v1.2.21 (7c45ed97)
+
+Checked 3 installs across 13 packages (no changes) [10.00ms]
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser>bun run dev
+$ bunx @tauri-apps/cli dev
+     Running BeforeDevCommand (`bun run dev-server.js`)
+Dev server running on http://localhost:1420
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri for changes...
+       Error Found version mismatched Tauri packages. Make sure the NPM package and Rust crate versions are on the same major/minor releases:
+tauri (v1.8.3) : @tauri-apps/api (v1.6.0)
+   Compiling webview2-com-sys v0.19.0
+   Compiling tao v0.16.10
+   Compiling zed-browser v1.0.0 (C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri)
+error: failed to run custom build command for `zed-browser v1.0.0 (C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser\src-tauri\target\debug\build\zed-browser-3d8e0df4fd0ca2e9\build-script-build` (exit code: 1)
+  --- stdout
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rerun-if-changed=tauri.conf.json
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  unknown field `app`, expected one of `$schema`, `package`, `tauri`, `build`, `plugins`
+  found an unknown configuration field. This usually means that you are using a CLI version that is newer than `tauri-build` and is incompatible. Please try updating the Rust crates by running `cargo update` in the Tauri app folder.
+warning: build failed, waiting for other jobs to finish...
+error: script "dev" exited with code 101
+
+C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser\Zed-But-Browser>
