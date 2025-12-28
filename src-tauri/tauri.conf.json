@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "build": {
     "beforeBuildCommand": "",
-    "beforeDevCommand": "",
-    "devUrl": "../public",
+    "beforeDevCommand": "bun run dev-server.js",
+    "devUrl": "http://localhost:1420",
     "frontendDist": "../public"
   },
   "app": {
