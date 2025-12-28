@@ -1,13 +1,12 @@
 {
+  "identifier": "com.zed.browser",
   "package": {
     "productName": "Zed Browser",
     "version": "1.0.0"
   },
   "build": {
     "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devPath": "../public",
-    "distDir": "../public"
+    "beforeBuildCommand": ""
   },
   "tauri": {
     "allowlist": {
@@ -41,7 +40,6 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.zed.browser",
       "icon": []
     },
     "security": {
