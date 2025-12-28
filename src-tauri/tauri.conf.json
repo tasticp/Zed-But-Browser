@@ -1,61 +1,30 @@
 {
   "identifier": "com.zed.browser",
-  "package": {
-    "productName": "Zed Browser",
-    "version": "1.0.0"
-  },
+  "productName": "Zed Browser",
+  "version": "1.0.0",
   "build": {
+    "beforeBuildCommand": "",
     "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "devUrl": "../public",
+    "frontendDist": "../public"
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "window": {
-        "all": false,
-        "close": true,
-        "hide": true,
-        "show": true,
-        "maximize": true,
-        "minimize": true,
-        "unmaximize": true,
-        "unminimize": true,
-        "startDragging": true,
-        "setTitle": true,
-        "setSize": true,
-        "setPosition": true,
-        "setFullscreen": true,
-        "setFocus": true
-      },
-      "http": {
-        "all": true,
-        "request": true,
-        "scope": ["http://**", "https://**"]
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "icon": []
-    },
+  "app": {
     "security": {
       "csp": null
     },
     "windows": [
       {
         "fullscreen": false,
+        "height": 900,
         "resizable": true,
         "title": "Zed Browser",
         "width": 1400,
-        "height": 900,
         "minWidth": 800,
         "minHeight": 600,
         "url": "onboarding.html"
       }
     ]
-  }
+  },
+  "bundle": {},
+  "plugins": {}
 }
