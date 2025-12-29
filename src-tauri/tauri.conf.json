@@ -25,6 +25,10 @@
       }
     ]
   },
-  "bundle": {},
+  "bundle": {
+    "icon": [
+      "icons/zed.ico"
+    ]
+  },
   "plugins": {}
 }
