@@ -4,9 +4,9 @@
   "description": "A modern, lightweight browser with customizable engine selection and built-in ad blocking",
   "type": "module",
   "scripts": {
-    "dev": "bunx @tauri-apps/cli dev",
-    "build": "bunx @tauri-apps/cli build",
-    "tauri": "bunx @tauri-apps/cli"
+    "dev": "bunx @tauri-apps/cli@1.6.0 dev",
+    "build": "bunx @tauri-apps/cli@1.6.0 build",
+    "tauri": "bunx @tauri-apps/cli@1.6.0"
   },
   "keywords": ["browser", "tauri", "rust", "ad-blocker", "webview"],
   "author": "",
