@@ -39,17 +39,24 @@ Unlike Electron (which VSCode uses and can be slow), Zed Browser uses:
 
 ### Build from Source
 
-1. Install dependencies:
+1. **Clone this repository** (if you haven’t already):
+```bash
+git clone <your-git-url-for-zed-browser>
+cd Zed-But-Browser
+```
+> If you downloaded a ZIP instead of using git, just `cd` into the extracted folder.
+
+2. **Install JavaScript dependencies**:
 ```bash
 bun install
 ```
 
-2. Run in development mode:
+3. **Run in development mode**:
 ```bash
 bun run dev
 ```
 
-3. Build for production:
+4. **Build for production**:
 ```bash
 bun run build
 ```

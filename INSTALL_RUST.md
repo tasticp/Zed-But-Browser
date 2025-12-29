@@ -38,17 +38,19 @@ scoop install rust
 
 ## After Installation
 
-1. **Navigate to your project:**
+1. **Clone this project (if you haven’t already):**
    ```powershell
-   cd C:\Users\tasticp\Desktop\Z\test\Zed-But-Browser
+   git clone <your-git-url-for-zed-browser>
+   cd Zed-But-Browser
    ```
+   > If you already cloned the repo or downloaded a ZIP, just `cd` into that folder instead.
 
-2. **Build the project:**
+2. **Build the Rust project directly (wry version):**
    ```powershell
    cargo build --release
    ```
 
-3. **Run the browser:**
+3. **Run the Rust browser directly:**
    ```powershell
    cargo run
    ```
