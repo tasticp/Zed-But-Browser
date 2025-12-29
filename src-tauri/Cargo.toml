@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [package]
 name = "zed-browser"
 version = "1.0.0"
@@ -18,3 +19,25 @@ serde_json = "1.0"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+=======
+[package]
+name = "zed-browser"
+version = "1.0.0"
+description = "A modern, lightweight browser with customizable engine selection"
+authors = [""]
+license = "MIT"
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+>>>>>>> fcd1e745c5ff4ccca526c20027637bcdb90c141c
