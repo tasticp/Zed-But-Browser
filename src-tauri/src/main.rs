@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tauri::{Manager, Window};
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct BrowserEngine {
@@ -46,12 +46,8 @@ impl BrowserEngine {
     }
 }
 
-struct AppState {
-    config_path: PathBuf,
-}
-
 fn get_config_path(app: &tauri::AppHandle) -> PathBuf {
-    let app_data_dir = app.path_resolver()
+    let app_data_dir = app.path()
         .app_data_dir()
         .expect("Failed to get app data directory");
     
@@ -141,7 +137,7 @@ fn set_ad_blocking_enabled(enabled: bool, app: tauri::AppHandle) -> bool {
 
 fn main() {
     tauri::Builder::default()
-        .setup(|app| {
+        .setup(|_app| {
             // Onboarding check will be handled by frontend
             Ok(())
         })
