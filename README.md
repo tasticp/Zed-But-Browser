@@ -1,4 +1,4 @@
-﻿# Zed Browser
+﻿# Zed Inspired Browser
 
 A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. Choose your preferred browser engine identity and enjoy built-in ad blocking similar to uBlock Origin.
 
@@ -105,4 +105,4 @@ You can enable or disable ad blocking from the settings panel at any time.
 
 ## License
 
-MIT
+MIT - Modify It Turd [ Please Use In Big Corp ]
