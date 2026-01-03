@@ -1,107 +1,120 @@
 ﻿# Zed Browser
 
-A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. Choose your preferred browser engine identity and enjoy built-in ad blocking similar to uBlock Origin.
+A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. This project is inspired by the Zed editor UI and focuses on power browsing with a minimal memory footprint and a fast, responsive UI.
 
-## Features
+This repository now includes:
+- A compact Rust/Tauri backend with a small persistent state store for tabs, bookmarks, and preferences.
+- A single-WebView strategy (reused iframe) to minimize memory usage while providing full-featured tab/history management.
+- An integrated, lightweight ad-blocking engine with a small default rule set and runtime rule management.
+- A local, Rust-based full-text search index for offline/local search of indexed pages.
+- A Zed-style left sidebar with breadcrumb-like history crumbs, lightweight animations, and virtualization-ready tab list.
 
-- **Zed-Inspired UI/UX** - Modern, minimal design with clean aesthetics and smooth interactions
-- **Sidebar with Folders** - Zen/Arc-style vertical sidebar with bookmark folder organization (coming soon)
-- **Ultra-lightweight** - Built with Rust/Tauri, uses system WebView (WKWebView/WebView2/WebKit) - no bundled Chromium!
-- **Minimalist Design** - Helium-inspired clean interface with essential controls only
-- **Efficient memory management** - Rust backend ensures minimal memory footprint
-- **Cross-platform** - Windows, macOS, Linux support via system WebView
-- **Fast startup** - Minimal initialization overhead, native performance
-- **Tab management** - Efficient tab system with history tracking (coming soon)
-- **Bookmark organization** - Folder-based bookmark management (coming soon)
-- **System WebView** - Uses native OS rendering engine (WKWebView on macOS, WebView2 on Windows, WebKit on Linux)
-- 🎯 **Customizable Browser Engine Identity**: Choose between Chromium, Firefox (Gecko), WebKit, or Microsoft Edge user agents
-- 🛡️ **Built-in Ad Blocking**: uBlock-like ad blocking that blocks ads, trackers, and malicious content
-- ⚙️ **Easy Settings**: Change your browser engine identity anytime from the settings panel
+## Features (Updated)
 
-## Why Rust/Tauri Instead of Electron?
+- Zed-inspired UI/UX — Minimal, keyboard-friendly design with a left sidebar for tab navigation and breadcrumb history.
+- Sidebar with Breadcrumb Tabs — Vertical sidebar showing tabs and a compact history breadcrumb for the active tab.
+- Ultra-lightweight — Rust + Tauri, using the system WebView (no bundled Chromium).
+- Memory-optimized tab model — single WebView reused for all tabs to reduce process/memory overhead.
+- Integrated Ad Blocking — Small, fast adblock matcher with persistent rules and a UI for managing rules.
+- Local Full-text Search — Local index (persisted in app data) for indexing and searching page content offline.
+- Cross-platform — Windows, macOS, Linux support via system WebView (WebView2 / WKWebView / WebKitGTK).
+- Fast startup — Minimal initialization and small binary size.
+- Tab management — Open/close/switch tabs with history, persisted in a compact JSON format.
+- Bookmark organization — Foldered bookmarks persisted and accessible via the sidebar.
+- Configurable Browser Engine Identity — Select user-agent identity (Chromium, Firefox, WebKit, Edge) via onboarding or settings.
+- Developer-friendly Tauri commands — Many backend features are exposed as Tauri commands for the frontend to call.
 
-Unlike Electron (which VSCode uses and can be slow), Zed Browser uses:
-- **Tauri**: Rust-based framework that's 10-100x smaller than Electron
-- **System WebView**: Uses your OS's native web rendering engine instead of bundling Chromium
-- **Native Performance**: Rust backend ensures fast, efficient operations
-- **Smaller Binaries**: Typical app size is 5-15MB vs Electron's 100-200MB+
-- **Lower Memory Usage**: Shares system WebView instead of running separate Chromium instances
+## What’s new (technical changes)
 
-## Installation
+New backend modules (Tauri):
+- `src-tauri/src/browser.rs` — Persistent, compact tab/bookmark state and commands:
+  - Commands exposed: `list_tabs`, `open_tab`, `close_tab`, `switch_tab`, `navigate_tab`, `tab_go_back`, `tab_go_forward`, `get_active_tab`, `list_bookmark_folders`, `add_bookmark`, `remove_bookmark`, `toggle_folder`, `get_preferences`, `ensure_at_least_one_tab`, and more.
+  - State persisted in `browser_state.json` inside the app data directory.
+- `src-tauri/src/adblock.rs` — Lightweight ad-block matcher and rule manager:
+  - Commands exposed: `should_block_url`, `list_rules`, `add_rule`, `remove_rule`, `reset_to_default_rules`, `reload_rules`.
+  - Default small curated rule-set included; rules are persisted to `adblock_rules.json`.
+  - Designed for low-memory and fast substring/domain matching; suitable to call from request interception hooks.
+- `src-tauri/src/search_index.rs` — Local search index:
+  - Commands exposed: `index_page`, `remove_document`, `search`, `get_document`, `rebuild_index`, `index_count`.
+  - Stores a compact inverted index in `search_index.json`. Uses simple tokenization and TF-IDF-like scoring to return relevant pages.
 
-### Prerequisites
+Frontend changes:
+- `public/browser.js` updated to integrate with Tauri commands:
+  - Sidebar with tab list and breadcrumb history (lightweight DOM + virtualization-ready structure).
+  - Omnibox uses `build_search_url` backend command so the selected engine affects search URLs.
+  - Settings panel now includes ad-block rules UI (list, add, remove, reset).
+- `public/index.html` markup/CSS updated to host the sidebar and breadcrumbs while keeping the UI minimal and responsive.
 
-- **Rust**: Install from [rustup.rs](https://rustup.rs/)
-- **System WebView**:
-  - **Windows**: WebView2 (usually pre-installed with Windows 11, or install from Microsoft)
-  - **macOS**: WKWebView (built-in)
-  - **Linux**: WebKitGTK (install via package manager)
+Wry (native) path:
+- The wry-based binary (`src/main.rs`) includes minimal IPC glue and shows how to add request interception hooks. For full ad-blocking at the native/webview level, use the platform-specific request hook to call `should_block_url` to decide whether to block a resource request.
 
-### Build from Source
+## Ad Blocking (how it works now)
 
-1. **Clone this repository** (if you haven’t already):
-```bash
-git clone <your-git-url-for-zed-browser>
-cd Zed-But-Browser
-```
-> If you downloaded a ZIP instead of using git, just `cd` into the extracted folder.
+- The ad-blocker uses a compact set of domain/substring/wildcard rules and runs in the Tauri backend.
+- Rules are persisted in the app data directory (`adblock_rules.json`).
+- The frontend provides a small UI to inspect/add/remove/reset rules (Settings → Ad Block Rules).
+- To actually block requests early, the platform-specific request interceptor should invoke the `should_block_url` command and, if true, return an empty/403 response for that request. The repository contains a minimal example of how to add such a hook in the wry path; for the Tauri path, add request interception and call `should_block_url` in your native hook.
 
-2. **Install JavaScript dependencies**:
-```bash
-bun install
-```
+Example rule operations (frontend calls backend via Tauri invoke):
+- List rules: `invoke('list_rules')`
+- Add rule: `invoke('add_rule', { kind: 'Domain', pattern: 'doubleclick.net' })`
+- Remove rule: `invoke('remove_rule', { kind: 'Domain', pattern: 'doubleclick.net' })`
+- Reset to defaults: `invoke('reset_to_default_rules')`
 
-3. **Run in development mode**:
-```bash
-bun run dev
-```
+## Local search (how to use)
 
-4. **Build for production**:
-```bash
-bun run build
-```
+- Index a page:
+  - `invoke('index_page', { url: 'https://example.com', title: 'Example', content: '...' })`
+- Search:
+  - `invoke('search', { query: 'example search', limit: 10 })`
+- The local index is persisted to `search_index.json` in the app data directory.
 
-## Why "Microsoft Edge" Appears
+Use cases:
+- Offline search of previously visited or user-indexed pages.
+- Fast, private lookups without remote dependencies.
 
-When you see "Microsoft Edge" in error pages or browser detection, it's because:
+## UI notes
 
-1. **System WebView on Windows**: Windows uses WebView2, which is based on Edge's Chromium engine
-2. **User Agent**: By default, WebView2 may identify as Edge
-3. **Solution**: You can change this through the onboarding flow or settings panel to use a different browser engine's user agent string
-
-The onboarding flow lets you choose which browser engine identity you want to use, and you can change it anytime from the settings panel (⚙ button in the toolbar).
-
-## Browser Engine Identities
-
-- **Chromium**: Fast and modern, used by Chrome and Edge
-- **Firefox (Gecko)**: Privacy-focused, used by Firefox
-- **WebKit**: Lightweight, used by Safari
-- **Microsoft Edge**: Microsoft Edge engine
-
-Note: These are user agent strings that change how websites identify your browser. The actual rendering engine depends on your OS (WebView2 on Windows, WKWebView on macOS, WebKit on Linux).
-
-## Ad Blocking
-
-The built-in ad blocker blocks:
-- Common ad domains and patterns
-- Tracking scripts and pixels
-- Malicious content
-- Analytics trackers
-
-You can enable or disable ad blocking from the settings panel at any time.
+- The left sidebar provides a compact, Zed-inspired style:
+  - Tab entries are lightweight DOM nodes with small controls.
+  - Active tab shows a breadcrumb history area (last N history entries) for quick navigation.
+  - The sidebar uses a virtualizable layout (the current implementation is ready to be extended with virtualization to handle thousands of tabs with minimal DOM cost).
+- The browsing core uses a single iframe/WebView reused across tabs to keep RAM low. Tab state (history, title, URL) is stored in the Rust backend.
 
 ## Development
 
-- `bun run dev` - Start development server with hot reload
-- `bun run build` - Build the production application
-- `bun run tauri` - Run Tauri CLI commands
+- `bun run dev` - Start development server with hot reload (Tauri dev wrapper).
+- `bun run build` - Build the production application (Tauri build).
+- `bun run tauri` - Run Tauri CLI commands.
 
-## Architecture
+Backend development tips:
+- New Tauri commands were added. See `src-tauri/src/`:
+  - `browser.rs` — tab/bookmark commands
+  - `adblock.rs` — ad-block rules and matching
+  - `search_index.rs` — local search index
+- Keep rules and index files small to preserve low memory usage.
 
-- **Frontend**: HTML/CSS/JavaScript (in `public/`)
-- **Backend**: Rust (in `src-tauri/src/`)
-- **Framework**: Tauri 1.5
-- **Storage**: JSON-based config file in app data directory
+## Where to look in the code
+
+- Frontend:
+  - `public/index.html` — app shell and layout
+  - `public/browser.js` — UI logic, tab/sidebar glue, adblock UI
+  - `public/onboarding.html` — onboarding engine selection
+- Backend (Tauri):
+  - `src-tauri/src/main.rs` — command registration and app bootstrap
+  - `src-tauri/src/browser.rs` — tab/bookmark persistent model and Tauri commands
+  - `src-tauri/src/adblock.rs` — adblock engine and rule management
+  - `src-tauri/src/search_index.rs` — local search index
+- Native/wry path:
+  - `src/main.rs` — alternative wry-based binary with request-interception glue examples
+
+## Next steps / suggestions
+
+- Improve ad-block rule matching performance with Aho-Corasick for large rule sets (optional).
+- Add request interception in the Tauri/wry native layer that calls `should_block_url` for each resource request to block early.
+- Improve visuals of the sidebar to match Zed editor more closely (fine-grained styling and animations).
+- Implement virtualization (lazy rendering) in the sidebar for very large tab lists; the current structure is prepared for it.
+- Expand the local search index with more sophisticated ranking (e.g., BM25) if needed.
 
 ## License
 

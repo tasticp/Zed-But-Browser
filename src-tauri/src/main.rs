@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
+mod browser;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct BrowserEngine {
@@ -47,14 +48,15 @@ impl BrowserEngine {
 }
 
 fn get_config_path(app: &tauri::AppHandle) -> PathBuf {
-    let app_data_dir = app.path()
+    let app_data_dir = app
+        .path()
         .app_data_dir()
         .expect("Failed to get app data directory");
-    
+
     if !app_data_dir.exists() {
         fs::create_dir_all(&app_data_dir).expect("Failed to create app data directory");
     }
-    
+
     app_data_dir.join("config.json")
 }
 
@@ -92,7 +94,10 @@ fn get_selected_engine(app: tauri::AppHandle) -> String {
 fn set_selected_engine(engine_id: String, app: tauri::AppHandle) -> bool {
     let config_path = get_config_path(&app);
     let mut config = load_config(&config_path);
-    config.insert("selectedEngine".to_string(), serde_json::Value::String(engine_id));
+    config.insert(
+        "selectedEngine".to_string(),
+        serde_json::Value::String(engine_id),
+    );
     save_config(&config_path, &config);
     true
 }
@@ -111,7 +116,10 @@ fn has_completed_onboarding(app: tauri::AppHandle) -> bool {
 fn complete_onboarding(app: tauri::AppHandle) -> bool {
     let config_path = get_config_path(&app);
     let mut config = load_config(&config_path);
-    config.insert("hasCompletedOnboarding".to_string(), serde_json::Value::Bool(true));
+    config.insert(
+        "hasCompletedOnboarding".to_string(),
+        serde_json::Value::Bool(true),
+    );
     save_config(&config_path, &config);
     true
 }
@@ -130,7 +138,10 @@ fn get_ad_blocking_enabled(app: tauri::AppHandle) -> bool {
 fn set_ad_blocking_enabled(enabled: bool, app: tauri::AppHandle) -> bool {
     let config_path = get_config_path(&app);
     let mut config = load_config(&config_path);
-    config.insert("adBlockingEnabled".to_string(), serde_json::Value::Bool(enabled));
+    config.insert(
+        "adBlockingEnabled".to_string(),
+        serde_json::Value::Bool(enabled),
+    );
     save_config(&config_path, &config);
     true
 }
@@ -149,6 +160,39 @@ fn main() {
             complete_onboarding,
             get_ad_blocking_enabled,
             set_ad_blocking_enabled,
+            // Adblock commands
+            adblock::should_block_url,
+            adblock::reload_rules,
+            adblock::add_rule,
+            adblock::remove_rule,
+            adblock::list_rules,
+            adblock::reset_to_default_rules,
+            // Local search index commands
+            search_index::index_page,
+            search_index::remove_document,
+            search_index::search,
+            search_index::get_document,
+            search_index::rebuild_index,
+            search_index::index_count,
+            // Browser module commands (lightweight state & tab/bookmark APIs)
+            browser::list_tabs,
+            browser::open_tab,
+            browser::close_tab,
+            browser::switch_tab,
+            browser::navigate_tab,
+            browser::tab_go_back,
+            browser::tab_go_forward,
+            browser::get_active_tab,
+            browser::list_bookmark_folders,
+            browser::add_bookmark,
+            browser::remove_bookmark,
+            browser::toggle_folder,
+            browser::get_preferences,
+            // Center-search on new tab prefs (frontend reads these)
+            browser::get_center_search_enabled,
+            browser::set_center_search_on_new_tab,
+            browser::build_search_url,
+            browser::ensure_at_least_one_tab,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
