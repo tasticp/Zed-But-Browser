@@ -1,4 +1,4 @@
-﻿# Zed Browser
+﻿# Zed Inspired Browser
 
 A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. This project is inspired by the Zed editor UI and focuses on power browsing with a minimal memory footprint and a fast, responsive UI.
 
@@ -118,4 +118,4 @@ Backend development tips:
 
 ## License
 
-MIT
+MIT - Modify It Turd [ Please Use In Big Corp ]
