@@ -14,7 +14,7 @@ use std::{
     path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 /// Representation of a single tab. Keep it compact for memory efficiency.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -120,6 +120,8 @@ pub struct BrowserState {
     /// Whether the omnibox/search should appear centered on new tabs.
     /// Stored as Option<bool> for forward compatibility with older state files.
     pub center_search_on_new_tab: Option<bool>,
+    /// Whether the user has completed the onboarding process.
+    pub onboarding_completed: Option<bool>,
 }
 
 impl BrowserState {
@@ -169,9 +171,12 @@ impl BrowserState {
             ad_blocking_enabled: Some(true),
             // Default: show centered search on new tab
             center_search_on_new_tab: Some(true),
+            // Default: onboarding not completed
+            onboarding_completed: Some(false),
         }
     }
 
+    #[allow(dead_code)]
     pub fn tab_count(&self) -> usize {
         self.tabs.len()
     }
@@ -194,7 +199,7 @@ fn browser_state_path(app: &AppHandle) -> PathBuf {
 }
 
 /// Load state from disk. If missing or invalid, return a default state.
-fn load_state(app: &AppHandle) -> BrowserState {
+pub fn load_state(app: &AppHandle) -> BrowserState {
     let config_path = browser_state_path(app);
     if config_path.exists() {
         match fs::File::open(&config_path) {
@@ -213,7 +218,7 @@ fn load_state(app: &AppHandle) -> BrowserState {
 }
 
 /// Persist state to disk. Swaps atomically by writing to a temp file then renaming.
-fn save_state(app: &AppHandle, state: &BrowserState) -> Result<(), String> {
+pub fn save_state(app: &AppHandle, state: &BrowserState) -> Result<(), String> {
     let config_path = browser_state_path(app);
     let tmp_path = config_path.with_extension("tmp");
     match serde_json::to_string_pretty(state) {
@@ -389,12 +394,17 @@ pub fn remove_bookmark(
 #[tauri::command]
 pub fn toggle_folder(app: AppHandle, folder_id: String) -> Result<bool, String> {
     let mut state = load_state(&app);
-    if let Some(folder) = state.folders.get_mut(&folder_id) {
+    let result = if let Some(folder) = state.folders.get_mut(&folder_id) {
         folder.expanded = !folder.expanded;
+        Ok(folder.expanded)
+    } else {
+        Err("Folder not found".to_string())
+    };
+
+    if result.is_ok() {
         save_state(&app, &state)?;
-        return Ok(folder.expanded);
     }
-    Err("Folder not found".to_string())
+    result
 }
 
 /// Get engine selection and ad-blocking preference.
@@ -406,6 +416,20 @@ pub fn get_preferences(app: AppHandle) -> (Option<String>, Option<bool>, Option<
         state.ad_blocking_enabled,
         state.center_search_on_new_tab,
     )
+}
+
+/// Get the currently selected search engine.
+#[tauri::command]
+pub fn get_selected_engine(app: AppHandle) -> Option<String> {
+    let state = load_state(&app);
+    state.selected_engine
+}
+
+/// Get whether ad blocking is enabled.
+#[tauri::command]
+pub fn get_ad_blocking_enabled(app: AppHandle) -> bool {
+    let state = load_state(&app);
+    state.ad_blocking_enabled.unwrap_or(true)
 }
 
 /// Set selected engine.
@@ -424,6 +448,13 @@ pub fn set_ad_blocking_enabled(app: AppHandle, enabled: bool) -> Result<bool, St
     state.ad_blocking_enabled = Some(enabled);
     save_state(&app, &state)?;
     Ok(true)
+}
+
+/// Get whether the omnibox/search should appear centered on new tabs.
+#[tauri::command]
+pub fn get_center_search_enabled(app: AppHandle) -> bool {
+    let state = load_state(&app);
+    state.center_search_on_new_tab.unwrap_or(true)
 }
 
 /// Set whether the omnibox/search should appear centered on new tabs.

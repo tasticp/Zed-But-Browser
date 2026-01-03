@@ -2,11 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
-use tauri::Manager;
+
+mod adblock;
 mod browser;
+mod search_index;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct BrowserEngine {
@@ -47,103 +46,23 @@ impl BrowserEngine {
     }
 }
 
-fn get_config_path(app: &tauri::AppHandle) -> PathBuf {
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .expect("Failed to get app data directory");
-
-    if !app_data_dir.exists() {
-        fs::create_dir_all(&app_data_dir).expect("Failed to create app data directory");
-    }
-
-    app_data_dir.join("config.json")
-}
-
-fn load_config(config_path: &PathBuf) -> HashMap<String, serde_json::Value> {
-    if config_path.exists() {
-        let content = fs::read_to_string(config_path).unwrap_or_else(|_| "{}".to_string());
-        serde_json::from_str(&content).unwrap_or_else(|_| HashMap::new())
-    } else {
-        HashMap::new()
-    }
-}
-
-fn save_config(config_path: &PathBuf, config: &HashMap<String, serde_json::Value>) {
-    let content = serde_json::to_string_pretty(config).expect("Failed to serialize config");
-    fs::write(config_path, content).expect("Failed to write config");
-}
-
 #[tauri::command]
 fn get_browser_engines() -> Vec<BrowserEngine> {
     BrowserEngine::all()
 }
 
 #[tauri::command]
-fn get_selected_engine(app: tauri::AppHandle) -> String {
-    let config_path = get_config_path(&app);
-    let config = load_config(&config_path);
-    config
-        .get("selectedEngine")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "chromium".to_string())
-}
-
-#[tauri::command]
-fn set_selected_engine(engine_id: String, app: tauri::AppHandle) -> bool {
-    let config_path = get_config_path(&app);
-    let mut config = load_config(&config_path);
-    config.insert(
-        "selectedEngine".to_string(),
-        serde_json::Value::String(engine_id),
-    );
-    save_config(&config_path, &config);
-    true
-}
-
-#[tauri::command]
 fn has_completed_onboarding(app: tauri::AppHandle) -> bool {
-    let config_path = get_config_path(&app);
-    let config = load_config(&config_path);
-    config
-        .get("hasCompletedOnboarding")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
+    let state = browser::load_state(&app);
+    state.onboarding_completed.unwrap_or(false)
 }
 
 #[tauri::command]
-fn complete_onboarding(app: tauri::AppHandle) -> bool {
-    let config_path = get_config_path(&app);
-    let mut config = load_config(&config_path);
-    config.insert(
-        "hasCompletedOnboarding".to_string(),
-        serde_json::Value::Bool(true),
-    );
-    save_config(&config_path, &config);
-    true
-}
-
-#[tauri::command]
-fn get_ad_blocking_enabled(app: tauri::AppHandle) -> bool {
-    let config_path = get_config_path(&app);
-    let config = load_config(&config_path);
-    config
-        .get("adBlockingEnabled")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true)
-}
-
-#[tauri::command]
-fn set_ad_blocking_enabled(enabled: bool, app: tauri::AppHandle) -> bool {
-    let config_path = get_config_path(&app);
-    let mut config = load_config(&config_path);
-    config.insert(
-        "adBlockingEnabled".to_string(),
-        serde_json::Value::Bool(enabled),
-    );
-    save_config(&config_path, &config);
-    true
+fn complete_onboarding(app: tauri::AppHandle) -> Result<bool, String> {
+    let mut state = browser::load_state(&app);
+    state.onboarding_completed = Some(true);
+    browser::save_state(&app, &state)?;
+    Ok(true)
 }
 
 fn main() {
@@ -154,26 +73,8 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             get_browser_engines,
-            get_selected_engine,
-            set_selected_engine,
             has_completed_onboarding,
             complete_onboarding,
-            get_ad_blocking_enabled,
-            set_ad_blocking_enabled,
-            // Adblock commands
-            adblock::should_block_url,
-            adblock::reload_rules,
-            adblock::add_rule,
-            adblock::remove_rule,
-            adblock::list_rules,
-            adblock::reset_to_default_rules,
-            // Local search index commands
-            search_index::index_page,
-            search_index::remove_document,
-            search_index::search,
-            search_index::get_document,
-            search_index::rebuild_index,
-            search_index::index_count,
             // Browser module commands (lightweight state & tab/bookmark APIs)
             browser::list_tabs,
             browser::open_tab,
@@ -188,11 +89,28 @@ fn main() {
             browser::remove_bookmark,
             browser::toggle_folder,
             browser::get_preferences,
-            // Center-search on new tab prefs (frontend reads these)
-            browser::get_center_search_enabled,
+            browser::get_selected_engine,
+            browser::get_ad_blocking_enabled,
+            browser::set_selected_engine,
+            browser::set_ad_blocking_enabled,
             browser::set_center_search_on_new_tab,
+            browser::get_center_search_enabled,
             browser::build_search_url,
             browser::ensure_at_least_one_tab,
+            // Adblock commands
+            adblock::should_block_url,
+            adblock::reload_rules,
+            adblock::add_rule,
+            adblock::remove_rule,
+            adblock::list_rules,
+            adblock::reset_to_default_rules,
+            // Search index commands
+            search_index::index_page,
+            search_index::remove_document,
+            search_index::search,
+            search_index::get_document,
+            search_index::rebuild_index,
+            search_index::index_count,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

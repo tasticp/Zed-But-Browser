@@ -19,10 +19,10 @@ Design constraints:
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::AppHandle;
+use tauri::Manager;
 
 /// File name for persisted index in the app data dir.
 const INDEX_FILE: &str = "search_index.json";

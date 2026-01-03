@@ -22,13 +22,9 @@ Design notes:
 */
 
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashSet,
-    fs,
-    io::{Read, Write},
-    path::PathBuf,
-};
+use std::{collections::HashSet, fs, io::Read, path::PathBuf};
 use tauri::AppHandle;
+use tauri::Manager;
 
 /// Filename for persisted adblock rules inside the app data dir.
 const ADBLOCK_RULES_FILE: &str = "adblock_rules.json";
@@ -51,8 +47,8 @@ pub struct RuleRecord {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-struct PersistedRules {
-    rules: Vec<RuleRecord>,
+pub struct PersistedRules {
+    pub rules: Vec<RuleRecord>,
 }
 
 /// Runtime compiled/adapted representation for efficient matching.
@@ -96,7 +92,7 @@ impl AdBlock {
         }
 
         // Persist default rules for first-run convenience
-        let mut ab = Self::with_default_rules();
+        let ab = Self::with_default_rules();
         let _ = ab.save(app); // ignore error; best-effort
         ab
     }
