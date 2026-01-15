@@ -118,4 +118,4 @@ Backend development tips:
 
 ## License
 
-MIT - Modify It Turd [ Please Use In Big Corp ]
+GPGL
