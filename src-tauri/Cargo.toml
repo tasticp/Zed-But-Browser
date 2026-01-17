@@ -1,16 +1,23 @@
 [package]
-name = "zed_but_browser_tauri"
-version = "0.0.1"
+name = "zed-browser"
+version = "0.1.0"
+description = "A Zed-inspired web browser built with Tauri"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tauri = { version = "2.0", features = [] }
-tauri-plugin-shell = "2.0"
-tauri-plugin-dialog = "2.0"
-tauri-plugin-fs = "2.0"
-tauri-plugin-os = "2.0"
+tauri = { version = "2", features = ["shell-open"] }
+tauri-plugin-shell = "2"
 
 [build-dependencies]
-tauri-build = { version = "2.5", features = [] }
+tauri-build = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true

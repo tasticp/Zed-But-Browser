@@ -1,84 +1,59 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ConfigEntry {
-  key: String,
-  value: String,
-}
-
-fn state_file_path(app: &AppHandle) -> PathBuf {
-  let mut p = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
-  p.push("zed_but_browser");
-  std::fs::create_dir_all(&p).ok();
-  p.push("state.json");
-  p
-}
-
-fn config_file_path(app: &AppHandle) -> PathBuf {
-  let mut p = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
-  p.push("zed_but_browser");
-  std::fs::create_dir_all(&p).ok();
-  p.push("config.json");
-  p
+#[tauri::command]
+async fn go_back(window: tauri::Window) -> Result<(), String> {
+    let webview = window
+        .get_webview_window("main")
+        .ok_or("No webview found")?;
+    webview.eval("window.history.back()").map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn read_state(app: AppHandle) -> Result<String, String> {
-  let p = state_file_path(&app);
-  match fs::read_to_string(&p) {
-    Ok(s) => Ok(s),
-    Err(_) => Ok(String::from("{}")),
-  }
+async fn go_forward(window: tauri::Window) -> Result<(), String> {
+    let webview = window
+        .get_webview_window("main")
+        .ok_or("No webview found")?;
+    webview.eval("window.history.forward()").map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn write_state(app: AppHandle, json: String) -> Result<bool, String> {
-  let p = state_file_path(&app);
-  fs::write(&p, json).map_err(|e| e.to_string())?;
-  Ok(true)
+async fn reload_page(window: tauri::Window) -> Result<(), String> {
+    let webview = window
+        .get_webview_window("main")
+        .ok_or("No webview found")?;
+    webview.eval("location.reload()").map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_config(app: AppHandle, key: String) -> Result<Option<String>, String> {
-  let p = config_file_path(&app);
-  let data = fs::read_to_string(&p).unwrap_or_else(|_| String::from("{}"));
-  let map: serde_json::Value = serde_json::from_str(&data).map_err(|e| e.to_string())?;
-  Ok(map.get(&key).and_then(|v| v.as_str().map(|s| s.to_string())))
-}
-
-#[tauri::command]
-fn set_config(app: AppHandle, key: String, value: String) -> Result<bool, String> {
-  let p = config_file_path(&app);
-  let data = fs::read_to_string(&p).unwrap_or_else(|_| String::from("{}"));
-  let mut map: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&data).unwrap_or_default();
-  map.insert(key, serde_json::Value::String(value));
-  let json = serde_json::Value::Object(map);
-  fs::write(&p, serde_json::to_string_pretty(&json).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-  Ok(true)
+async fn navigate(window: tauri::Window, url: String) -> Result<(), String> {
+    let webview = window
+        .get_webview_window("main")
+        .ok_or("No webview found")?;
+    let script = format!("window.location.href = '{}';", url.replace("'", "\\'"));
+    webview.eval(&script).map_err(|e| e.to_string())
 }
 
 fn main() {
-  tauri::Builder::default()
-    .plugin(tauri_plugin_shell::init())
-    .plugin(tauri_plugin_dialog::init())
-    .plugin(tauri_plugin_fs::init())
-    .plugin(tauri_plugin_os::init())
-    .invoke_handler(tauri::generate_handler![read_state, write_state, get_config, set_config])
-    .setup(|app| {
-      #[cfg(debug_assertions)]
-      {
-        let main_window = app.get_webview_window("main");
-        if let Some(window) = main_window {
-          let _ = window.open_devtools();
-        }
-      }
-      Ok(())
-    })
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .invoke_handler(tauri::generate_handler![
+            go_back,
+            go_forward,
+            reload_page,
+            navigate
+        ])
+        .setup(|app| {
+            #[cfg(debug_assertions)]
+            {
+                let window = app.get_webview_window("main");
+                if let Some(win) = window {
+                    let _ = win.open_devtools();
+                }
+            }
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

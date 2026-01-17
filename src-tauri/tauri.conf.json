@@ -1,21 +1,21 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "productName": "Zed But Browser",
-  "version": "0.0.1",
-  "identifier": "com.tasticp.zedbutbrowser",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Zed Browser",
+  "version": "0.1.0",
+  "identifier": "com.zed.browser",
   "build": {
-    "beforeDevCommand": "python -m http.server 3000 --directory ../public",
+    "beforeDevCommand": "python -m http.server 3000 --directory public",
     "beforeBuildCommand": "",
-    "frontendDist": "../public"
+    "frontendDist": "public"
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "targets": "all"
   },
   "app": {
     "windows": [
       {
-        "title": "Zed But Browser",
+        "title": "Zed Browser",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -24,5 +24,10 @@
         "fullscreen": false
       }
     ]
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
   }
 }

@@ -1,94 +1,37 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zed Browser</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app" class="zed-app">
-    <!-- Zed-style top menu bar -->
-    <div class="zed-menu-bar">
-      <div class="menu-item">File</div>
-      <div class="menu-item">Edit</div>
-      <div class="menu-item">View</div>
-      <div class="menu-item">Goto</div>
-      <div class="menu-item">Tools</div>
-      <div class="menu-item">Help</div>
-    </div>
-
-    <!-- Main Zed layout: sidebar + tabs + editor + right panel -->
-    <div class="zed-layout">
-      <!-- Left Sidebar (File/Tab Tree) -->
-      <aside id="sidebar" class="zed-sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-title">TABS</div>
-          <button id="sidebar-toggle-btn" class="sidebar-btn" title="Toggle Sidebar">⊟</button>
-        </div>
-        <div id="file-tree" class="file-tree"></div>
-      </aside>
-
-      <!-- Center Editor Area -->
-      <div class="zed-editor-area">
-        <!-- Tab Bar (open tabs) -->
-        <div class="zed-tab-bar">
-          <div id="tab-list" class="tab-list">
-            <!-- Tabs will be inserted here -->
-          </div>
-          <div class="tab-bar-spacer"></div>
-        </div>
-
-        <!-- Main Editor/Content Area -->
-        <div id="editor-pane" class="zed-editor-pane">
-          <div id="editor-content" class="editor-content">
-            <div class="empty-state">
-              <div class="empty-message">Select a tab to browse</div>
-            </div>
-          </div>
+  <div id="app">
+    <nav class="toolbar">
+      <div class="nav-controls">
+        <button id="btn-back" class="nav-btn" title="Back">←</button>
+        <button id="btn-forward" class="nav-btn" title="Forward">→</button>
+        <button id="btn-reload" class="nav-btn" title="Reload">⟳</button>
+      </div>
+      <div class="url-bar">
+        <input type="text" id="url-input" placeholder="Enter URL or search..." autocomplete="off">
+      </div>
+      <div class="toolbar-actions">
+        <button id="btn-menu" class="nav-btn">☰</button>
+      </div>
+    </nav>
+    <main id="browser-content">
+      <div id="start-page">
+        <h1>Zed Browser</h1>
+        <p>A minimal browser with Zed-inspired design</p>
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search the web...">
+          <button id="btn-search">Search</button>
         </div>
       </div>
-
-      <!-- Right Sidebar (AI Panel - Optional) -->
-      <aside id="ai-panel" class="zed-ai-panel hidden">
-        <div class="ai-panel-header">
-          <div class="ai-panel-title">ASSISTANT</div>
-          <button id="ai-panel-close" class="panel-btn">×</button>
-        </div>
-        <div class="ai-panel-content">
-          <div class="ai-status">Connect API key to enable AI features</div>
-        </div>
-      </aside>
-    </div>
-
-    <!-- Command Palette / Search Modal (Ctrl+P or Ctrl+T) -->
-    <div id="command-palette" class="command-palette hidden">
-      <div class="command-container">
-        <div class="command-input-section">
-          <input 
-            id="command-input" 
-            type="text" 
-            class="command-input" 
-            placeholder="Search tabs, commands, or files..."
-            autocomplete="off"
-          />
-        </div>
-        <div id="command-results" class="command-results">
-          <div class="results-placeholder">Start typing to search...</div>
-        </div>
-        <div class="command-help">
-          <span>↑↓ navigate</span>
-          <span>Enter select</span>
-          <span>Esc close</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal overlay for command palette -->
-    <div id="command-backdrop" class="command-backdrop hidden"></div>
+    </main>
   </div>
-
-  <script src="nestedTabs.js"></script>
-  <script src="browser.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
