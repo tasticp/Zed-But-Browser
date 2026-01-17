@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 
 #[tauri::command]
 async fn go_back(window: tauri::Window) -> Result<(), String> {

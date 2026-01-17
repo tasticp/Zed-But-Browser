@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.zed.browser",
   "build": {
-    "beforeDevCommand": "python -m http.server 3000 --directory public",
+    "beforeDevCommand": "python -m http.server 3000 --directory ../public",
     "beforeBuildCommand": "",
-    "frontendDist": "public"
+    "frontendDist": "../public"
   },
   "bundle": {
     "active": true,
