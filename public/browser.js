@@ -45,7 +45,26 @@ window.BrowserAPI = BrowserAPI
 // Engine selector wiring
 window.addEventListener('load', async ()=>{
   const select = document.getElementById('engine-select')
+  if(!select) return
+  
   const current = await getConfig('preferred_engine') || 'webkit'
   select.value = current
   select.onchange = async ()=>{ await setConfig('preferred_engine', select.value) }
+
+  // Mobile menu toggle
+  const mobileToggle = document.getElementById('mobile-menu-toggle')
+  const sidebar = document.getElementById('sidebar')
+  if(window.innerWidth <= 768){
+    mobileToggle.classList.remove('hidden')
+    sidebar.classList.add('sidebar-collapsed')
+  }
+  
+  window.addEventListener('resize', ()=>{
+    if(window.innerWidth <= 768){
+      mobileToggle.classList.remove('hidden')
+    } else {
+      mobileToggle.classList.add('hidden')
+      sidebar.classList.remove('sidebar-collapsed')
+    }
+  })
 })

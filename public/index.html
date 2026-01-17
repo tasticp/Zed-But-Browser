@@ -2,25 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Zed-But-Browser — Nested Tabs Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Zed Browser</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="app">
-    <aside id="sidebar">
+    <!-- Sidebar with Zed-inspired design -->
+    <aside id="sidebar" class="sidebar-open">
       <div class="sidebar-header">
-        <button id="add-root">+ New Tab</button>
+        <div class="sidebar-title">TABS</div>
+        <div class="sidebar-actions">
+          <button id="add-root" class="icon-btn" title="New Tab (Ctrl+T)">+</button>
+          <button id="sidebar-toggle" class="icon-btn" title="Toggle Sidebar">≡</button>
+        </div>
       </div>
-      <div id="tree"></div>
+      <div id="tree" class="tabs-list"></div>
+      <div class="sidebar-footer">
+        <div class="sidebar-config">
+          <label>Engine:</label>
+          <select id="engine-select" class="engine-selector">
+            <option value="webkit">WebKit</option>
+            <option value="chromium">Chromium</option>
+            <option value="firefox">Firefox</option>
+            <option value="edge">Edge</option>
+            <option value="ladybird">Ladybird</option>
+          </select>
+        </div>
+      </div>
     </aside>
+
+    <!-- Main content area -->
     <main id="main">
-      <div id="breadcrumbs"></div>
-      <div id="content">
-        <div id="tab-view">Select a tab to view its content.</div>
+      <div id="breadcrumbs" class="breadcrumbs-bar"></div>
+      <div id="content" class="content-area">
+        <div id="tab-view" class="tab-view">Select a tab to view its content.</div>
       </div>
     </main>
   </div>
+
+  <!-- Centered Search Modal -->
+  <div id="search-modal" class="search-modal hidden">
+    <div class="search-container">
+      <div class="search-header">Quick Search</div>
+      <input id="search-input" type="text" class="search-input" placeholder="Search tabs, history, or web..." />
+      <div id="search-results" class="search-results"></div>
+      <div class="search-help">ESC to close · ↑↓ to navigate · Enter to select</div>
+    </div>
+  </div>
+
+  <!-- Mobile hamburger menu -->
+  <div id="mobile-menu-toggle" class="mobile-menu-toggle hidden">☰</div>
 
   <script src="nestedTabs.js"></script>
   <script src="browser.js"></script>

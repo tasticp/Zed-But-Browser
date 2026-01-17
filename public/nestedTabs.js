@@ -111,6 +111,7 @@ function renderTree(){
 function renderNode(node){
   const el = document.createElement('div')
   el.className = 'node'
+  if(store.selected === node.id) el.classList.add('selected')
 
   const title = document.createElement('div')
   title.textContent = node.title
@@ -293,8 +294,12 @@ function loadStore(obj){
 
 // keyboard bindings
 window.addEventListener('keydown', (e)=>{
+  // Don't trigger if user is typing in search or input field
+  if(e.target.tagName === 'INPUT' && e.key !== 'Escape') return
+
   if((e.ctrlKey||e.metaKey) && e.key==='t'){
-    e.preventDefault(); const t=prompt('title','New Tab'); if(t) { createRoot(t,'/file'+Math.floor(Math.random()*10)); schedulePersist(); }
+    e.preventDefault()
+    openSearchModal()
   }
   if((e.ctrlKey||e.metaKey) && e.key==='w'){
     e.preventDefault(); if(store.selected) { if(confirm('Close selected?')) { closeNode(store.selected); schedulePersist(); } }
@@ -302,6 +307,94 @@ window.addEventListener('keydown', (e)=>{
   if((e.ctrlKey||e.metaKey) && e.key==='d'){
     e.preventDefault(); if(store.selected){ duplicateNode(store.selected); schedulePersist(); }
   }
+  if(e.key === 'Escape'){
+    closeSearchModal()
+  }
+})
+
+// Search modal functions
+function openSearchModal(){
+  const modal = document.getElementById('search-modal')
+  const input = document.getElementById('search-input')
+  modal.classList.remove('hidden')
+  input.focus()
+  input.value = ''
+  renderSearchResults('')
+}
+
+function closeSearchModal(){
+  const modal = document.getElementById('search-modal')
+  modal.classList.add('hidden')
+}
+
+function renderSearchResults(query){
+  const results = document.getElementById('search-results')
+  results.innerHTML = ''
+  
+  if(!query.trim()){
+    // Show recent tabs
+    const recent = Array.from(store.rootIds).slice(0, 10).map(id => store.nodes.get(id))
+    for(const node of recent){
+      const item = createSearchResultItem(node, 'Recent')
+      results.appendChild(item)
+    }
+    return
+  }
+
+  // Search through all nodes
+  const q = query.toLowerCase()
+  const matches = []
+  for(const [id, node] of store.nodes){
+    if(node.title.toLowerCase().includes(q) || (node.file && node.file.toLowerCase().includes(q))){
+      matches.push(node)
+    }
+  }
+
+  for(const node of matches.slice(0, 20)){
+    const item = createSearchResultItem(node, 'Tab')
+    results.appendChild(item)
+  }
+
+  if(matches.length === 0){
+    const noResult = document.createElement('div')
+    noResult.style.padding = '20px'
+    noResult.style.textAlign = 'center'
+    noResult.style.color = 'var(--muted)'
+    noResult.textContent = 'No matches found'
+    results.appendChild(noResult)
+  }
+}
+
+function createSearchResultItem(node, type){
+  const item = document.createElement('div')
+  item.className = 'search-result-item'
+  item.onclick = ()=>{ selectNode(node.id); closeSearchModal() }
+  
+  const left = document.createElement('div')
+  const title = document.createElement('div')
+  title.className = 'search-result-title'
+  title.textContent = node.title
+  const path = document.createElement('div')
+  path.className = 'search-result-path'
+  path.textContent = node.file || 'untitled'
+  left.appendChild(title)
+  left.appendChild(path)
+  
+  const badge = document.createElement('span')
+  badge.style.fontSize = '11px'
+  badge.style.color = 'var(--muted)'
+  badge.style.marginLeft = 'auto'
+  badge.textContent = type
+  
+  item.appendChild(left)
+  item.appendChild(badge)
+  return item
+}
+
+// Search input handler
+window.addEventListener('load', ()=>{
+  const searchInput = document.getElementById('search-input')
+  searchInput.addEventListener('input', (e)=>{ renderSearchResults(e.target.value) })
 })
 
 // initial demo content + load persisted
@@ -328,4 +421,13 @@ window.addEventListener('load', async ()=>{
     renderTree()
     schedulePersist()
   }
+
+  // Sidebar toggle
+  const sidebarToggle = document.getElementById('sidebar-toggle')
+  const sidebar = document.getElementById('sidebar')
+  sidebarToggle.onclick = ()=>{ sidebar.classList.toggle('sidebar-collapsed') }
+
+  // Search modal close on outside click
+  const searchModal = document.getElementById('search-modal')
+  searchModal.addEventListener('click', (e)=>{ if(e.target === searchModal) closeSearchModal() })
 })

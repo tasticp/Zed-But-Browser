@@ -1,132 +1,89 @@
 # Keyboard Shortcuts
 
-Master Zed But Browser with these keyboard shortcuts for fast, mouse-free navigation.
+Master Zed Browser with these keyboard shortcuts for fast, mouse-free navigation.
 
-## Tab Management
+## Essential Shortcuts (Currently Implemented)
 
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+T** | New tab | Opens a blank tab |
-| **Ctrl+W** | Close tab | Closes the current active tab |
-| **Ctrl+D** | Duplicate/Sync tab | Creates a linked copy that stays synchronized |
-| **Ctrl+N** | New window | Opens a new browser window |
-| **Ctrl+Shift+T** | Reopen closed tab | Restores the last closed tab (if available) |
+| Shortcut | Action | Platform |
+|----------|--------|----------|
+| **Ctrl+T** | Quick Search (tabs & history) | Windows/Linux |
+| **Cmd+T** | Quick Search (tabs & history) | macOS |
+| **Ctrl+W** | Close active tab | Windows/Linux |
+| **Cmd+W** | Close active tab | macOS |
+| **Ctrl+D** | Duplicate tab | Windows/Linux |
+| **Cmd+D** | Duplicate tab | macOS |
+| **Ctrl+B** | Toggle sidebar collapse | Windows/Linux |
+| **Cmd+B** | Toggle sidebar collapse | macOS |
+| **Escape** | Close search modal / cancel | All platforms |
 
-## Navigation
+## Search Modal Commands
 
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+L** | Focus address bar | Jump to address/search bar |
-| **Alt+←** | Back | Go to previous page in history |
-| **Alt+→** | Forward | Go to next page in history |
-| **Ctrl+R** | Refresh | Reload current page |
-| **Ctrl+Shift+R** | Hard refresh | Clear cache and reload |
-| **Ctrl+H** | Open history | Show browsing history |
-| **Ctrl+J** | Open downloads | Show downloaded files |
-| **Ctrl+Y** | Open history sidebar | Quick access to recent pages |
-
-## Search & Find
-
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+F** | Find on page | Search text within current page |
-| **Ctrl+G** | Next match | Jump to next search result on page |
-| **Ctrl+Shift+G** | Previous match | Jump to previous search result |
-| **Ctrl+K** | Web search | Opens search in selected engine |
-
-## Bookmarks & Settings
-
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+D** | Bookmark page | Add current page to bookmarks |
-| **Ctrl+B** | Toggle bookmarks sidebar | Show/hide bookmark panel |
-| **Ctrl+Shift+B** | Manage bookmarks | Open bookmark manager |
-| **Ctrl+,** | Open settings | Show app preferences and configuration |
-
-## Tab Switching
-
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+Tab** | Next tab | Move to the next tab (cycles through all tabs) |
-| **Ctrl+Shift+Tab** | Previous tab | Move to the previous tab |
-| **Ctrl+1** to **Ctrl+8** | Jump to tab | Switch to tabs 1–8 directly |
-| **Ctrl+9** | Last tab | Jump to the last tab |
-| **Ctrl+Alt+Right** | Tab to right | Move current tab to the right |
-| **Ctrl+Alt+Left** | Tab to left | Move current tab to the left |
-
-## Sidebar & UI
-
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+B** | Toggle sidebar | Show/hide left sidebar with tabs |
-| **Ctrl+Shift+P** | Command palette | Open command search (if available) |
-| **F12** | Developer tools | Open dev tools (debug mode) |
-| **F11** | Fullscreen | Toggle fullscreen mode |
-| **Ctrl+Plus** | Zoom in | Increase page zoom level |
-| **Ctrl+Minus** | Zoom out | Decrease page zoom level |
-| **Ctrl+0** | Reset zoom | Return to default zoom (100%) |
-
-## Advanced
-
-| Shortcut | Action | Notes |
-|----------|--------|-------|
-| **Ctrl+E** | Select all tabs | Select multiple tabs for batch operations |
-| **Ctrl+Shift+Delete** | Clear browsing data | Open data clearing dialog |
-| **Ctrl+Shift+M** | Mute/unmute tab | Toggle audio for current tab |
-| **Ctrl+Shift+N** | New private tab | Open tab in private/incognito mode |
+When Ctrl+T opens the Quick Search modal:
+- **Type** — Filter tabs and files by title or path
+- **↑ ↓** — Navigate through search results (navigation with keyboard planned)
+- **Enter** — Switch to the selected tab
+- **Escape** — Close the search modal
 
 ---
 
-## Tips & Tricks
+## UI Features
 
-### Power User Combos
+### Sidebar Collapse
+- Click the **≡** (hamburger) button in the top-right of the sidebar
+- Or press **Ctrl+B** (Windows/Linux) or **Cmd+B** (macOS)
+- Automatically collapses on mobile devices for full-screen content
+- Breadcrumb navigation at top lets you jump to parent tabs
 
-1. **Quickly switch engines:**
-   - Press `Ctrl+,` to open Settings
-   - Select engine from dropdown
-   - Settings auto-save
+### Breadcrumb Navigation
+- Shows the full path to the current tab at the top of the content area
+- Each breadcrumb is clickable to jump to an ancestor tab
+- Example: `Home > Settings > Advanced`
 
-2. **Mass organize tabs:**
-   - Press `Ctrl+E` to select multiple tabs
-   - Right-click to open context menu
-   - Move, close, or mute selected tabs
+### Engine Selector
+- Located in the sidebar footer
+- Switch browser engine identity:
+  - **WebKit** — Native macOS/Linux rendering
+  - **Chromium** — Chromium-based identity
+  - **Firefox** — Firefox user-agent
+  - **Edge** — Microsoft Edge user-agent
+  - **Ladybird** — Alternative engine identity
 
-3. **Navigate breadcrumb history:**
-   - Click breadcrumb items in sidebar
-   - Or use `Alt+←` / `Alt+→` to jump through history
-
-4. **Create nested tabs:**
-   - Click the `+` button in the sidebar
-   - Drag tabs to reorganize hierarchically
-   - Double-click to enter/exit nesting
-
-### Command Palette (Ctrl+Shift+P)
-
-Fast command entry:
-- Type `new tab` → **Ctrl+T**
-- Type `close` → **Ctrl+W**
-- Type `bookmark` → **Ctrl+D**
-- Type `settings` → **Ctrl+,**
+### Tab Tree Organization
+- Click **+** to create a new root tab
+- Click **+** on any tab to create nested child tabs
+- Click **dup** to duplicate a tab
+- Click **sync** to create synchronized linked copies
+- Click **x** to close a tab
 
 ---
 
-## Customizing Shortcuts
+## Pro Tips
 
-### Edit keybindings:
+1. **Quick Tab Search Workflow:**
+   - Press `Ctrl+T` to open search
+   - Type partial tab name and press **Enter** to switch
+   - Press **Escape** to cancel without switching
 
-1. Open Settings (**Ctrl+,**)
-2. Go to "Keyboard" section
-3. Click on any shortcut to remap
-4. Press new key combination
-5. Settings auto-save
+2. **Organize with Nested Tabs:**
+   - Create root tabs for major categories
+   - Use **+** on a tab to add child tabs
+   - Breadcrumbs show the full hierarchy path
+   - Example: `Research > Papers > AI > NLP`
 
-### Conflict resolution:
+3. **Smart Tab Duplication:**
+   - Click **dup** to clone a tab with all its properties
+   - Click **sync** to create linked instances that share state
+   - Synced tabs stay in perfect sync across instances
 
-If a shortcut conflicts with your OS:
-1. Open Settings → Keyboard
-2. Click the conflict warning
-3. Choose alternative binding
-4. Some OS shortcuts cannot be overridden
+4. **Compact Browsing:**
+   - Press `Ctrl+B` to collapse sidebar and maximize content area
+   - On mobile, sidebar auto-collapses for full-screen viewing
+   - Click breadcrumbs to jump to parent tabs without sidebar
+
+5. **Engine Switching:**
+   - Change browser engine in sidebar footer (bottom dropdown)
+   - Each engine has different user-agent identity
+   - Perfect for testing multi-browser compatibility
 
 ---
 
@@ -135,26 +92,33 @@ If a shortcut conflicts with your OS:
 ### macOS
 
 Replace **Ctrl** with **Cmd** (⌘):
-- **Cmd+T** — New tab
+- **Cmd+T** — Quick Search
 - **Cmd+W** — Close tab
 - **Cmd+D** — Duplicate tab
+- **Cmd+B** — Toggle sidebar
 
-### Linux
+### Linux & Windows
 
-Shortcuts work as shown (all use **Ctrl**).
+Shortcuts work as documented (all use **Ctrl**).
 
-### Windows
+---
 
-Shortcuts work as shown (all use **Ctrl**).
+## Mobile Usage
+
+On phone/tablet (width ≤ 768px):
+- Sidebar automatically collapses to save space
+- Hamburger menu (≡) toggles sidebar visibility
+- Breadcrumbs still show at top for navigation
+- Touch-friendly button sizes
 
 ---
 
 ## Accessibility
 
-- **Tab navigation:** Use **Tab** and **Shift+Tab** to navigate UI elements
-- **Voice commands:** Compatible with screen readers (NVDA, JAWS)
-- **High contrast:** Available in Settings → Appearance
-- **Keyboard only:** Full app navigation without mouse
+- **Keyboard-only navigation:** Full app control without mouse
+- **Screen reader support:** Tab and breadcrumb labels are properly announced
+- **High contrast UI:** Zed-inspired dark theme optimized for readability
+- **Focus indicators:** Clear visual feedback for keyboard navigation
 
 ---
 
@@ -166,4 +130,4 @@ Shortcuts work as shown (all use **Ctrl**).
 
 ---
 
-**Master the keyboard. Browse faster. ⚡**
+**Master the keyboard. Browse like Zed. ⚡**
