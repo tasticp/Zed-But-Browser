@@ -7,52 +7,86 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Sidebar with Zed-inspired design -->
-    <aside id="sidebar" class="sidebar-open">
-      <div class="sidebar-header">
-        <div class="sidebar-title">TABS</div>
-        <div class="sidebar-actions">
-          <button id="add-root" class="icon-btn" title="New Tab (Ctrl+T)">+</button>
-          <button id="sidebar-toggle" class="icon-btn" title="Toggle Sidebar">≡</button>
-        </div>
-      </div>
-      <div id="tree" class="tabs-list"></div>
-      <div class="sidebar-footer">
-        <div class="sidebar-config">
-          <label>Engine:</label>
-          <select id="engine-select" class="engine-selector">
-            <option value="webkit">WebKit</option>
-            <option value="chromium">Chromium</option>
-            <option value="firefox">Firefox</option>
-            <option value="edge">Edge</option>
-            <option value="ladybird">Ladybird</option>
-          </select>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main content area -->
-    <main id="main">
-      <div id="breadcrumbs" class="breadcrumbs-bar"></div>
-      <div id="content" class="content-area">
-        <div id="tab-view" class="tab-view">Select a tab to view its content.</div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Centered Search Modal -->
-  <div id="search-modal" class="search-modal hidden">
-    <div class="search-container">
-      <div class="search-header">Quick Search</div>
-      <input id="search-input" type="text" class="search-input" placeholder="Search tabs, history, or web..." />
-      <div id="search-results" class="search-results"></div>
-      <div class="search-help">ESC to close · ↑↓ to navigate · Enter to select</div>
+  <div id="app" class="zed-app">
+    <!-- Zed-style top menu bar -->
+    <div class="zed-menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">Edit</div>
+      <div class="menu-item">View</div>
+      <div class="menu-item">Goto</div>
+      <div class="menu-item">Tools</div>
+      <div class="menu-item">Help</div>
     </div>
-  </div>
 
-  <!-- Mobile hamburger menu -->
-  <div id="mobile-menu-toggle" class="mobile-menu-toggle hidden">☰</div>
+    <!-- Main Zed layout: sidebar + tabs + editor + right panel -->
+    <div class="zed-layout">
+      <!-- Left Sidebar (File/Tab Tree) -->
+      <aside id="sidebar" class="zed-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">TABS</div>
+          <button id="sidebar-toggle-btn" class="sidebar-btn" title="Toggle Sidebar">⊟</button>
+        </div>
+        <div id="file-tree" class="file-tree"></div>
+      </aside>
+
+      <!-- Center Editor Area -->
+      <div class="zed-editor-area">
+        <!-- Tab Bar (open tabs) -->
+        <div class="zed-tab-bar">
+          <div id="tab-list" class="tab-list">
+            <!-- Tabs will be inserted here -->
+          </div>
+          <div class="tab-bar-spacer"></div>
+        </div>
+
+        <!-- Main Editor/Content Area -->
+        <div id="editor-pane" class="zed-editor-pane">
+          <div id="editor-content" class="editor-content">
+            <div class="empty-state">
+              <div class="empty-message">Select a tab to browse</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar (AI Panel - Optional) -->
+      <aside id="ai-panel" class="zed-ai-panel hidden">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">ASSISTANT</div>
+          <button id="ai-panel-close" class="panel-btn">×</button>
+        </div>
+        <div class="ai-panel-content">
+          <div class="ai-status">Connect API key to enable AI features</div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Command Palette / Search Modal (Ctrl+P or Ctrl+T) -->
+    <div id="command-palette" class="command-palette hidden">
+      <div class="command-container">
+        <div class="command-input-section">
+          <input 
+            id="command-input" 
+            type="text" 
+            class="command-input" 
+            placeholder="Search tabs, commands, or files..."
+            autocomplete="off"
+          />
+        </div>
+        <div id="command-results" class="command-results">
+          <div class="results-placeholder">Start typing to search...</div>
+        </div>
+        <div class="command-help">
+          <span>↑↓ navigate</span>
+          <span>Enter select</span>
+          <span>Esc close</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal overlay for command palette -->
+    <div id="command-backdrop" class="command-backdrop hidden"></div>
+  </div>
 
   <script src="nestedTabs.js"></script>
   <script src="browser.js"></script>

@@ -99,53 +99,36 @@ function closeNode(id){
 
 // UI rendering
 function renderTree(){
-  const tree = document.getElementById('tree')
+  const tree = document.getElementById('file-tree')
   tree.innerHTML = ''
   for(const id of store.rootIds){
     const node = store.nodes.get(id)
     tree.appendChild(renderNode(node))
   }
-  renderBreadcrumbs()
+  renderTabBar()
+  renderEditorContent()
 }
 
 function renderNode(node){
   const el = document.createElement('div')
-  el.className = 'node'
+  el.className = 'file-entry'
   if(store.selected === node.id) el.classList.add('selected')
 
+  const icon = document.createElement('div')
+  icon.className = 'file-entry-icon' + (node.children.length ? ' folder' : ' file')
+  icon.textContent = node.children.length ? '▼' : '📄'
+  
   const title = document.createElement('div')
+  title.className = 'file-entry-name'
   title.textContent = node.title
-  title.onclick = ()=>{ selectNode(node.id) }
-
-  const meta = document.createElement('div')
-  meta.className = 'meta'
-  const info = document.createElement('span')
-  info.textContent = node.file || 'untitled'
-  const actions = document.createElement('span')
-
-  const addChild = document.createElement('button')
-  addChild.textContent = '+'; addChild.className='btn'; addChild.onclick=(e)=>{ e.stopPropagation(); const t=prompt('child title','child'); if(t) createChild(node.id,t,'/file'+Math.floor(Math.random()*10)) }
-  const dup = document.createElement('button')
-  dup.textContent='dup'; dup.className='btn'; dup.onclick=(e)=>{ e.stopPropagation(); duplicateNode(node.id) }
-  const sync = document.createElement('button')
-  sync.textContent='sync'; sync.className='btn'; sync.onclick=(e)=>{ e.stopPropagation(); const parent = prompt('sync under parent id (or leave empty for root)'); syncLinkNode(node.id, parent || null) }
-  const close = document.createElement('button')
-  close.textContent='x'; close.className='btn'; close.onclick=(e)=>{ e.stopPropagation(); if(confirm('Close this tab and its children?')) closeNode(node.id) }
-
-  actions.appendChild(addChild)
-  actions.appendChild(dup)
-  actions.appendChild(sync)
-  actions.appendChild(close)
-
-  meta.appendChild(info)
-  meta.appendChild(actions)
-
+  
+  el.appendChild(icon)
   el.appendChild(title)
-  el.appendChild(meta)
+  el.onclick = ()=>{ selectNode(node.id) }
 
   if(node.children.length){
     const childWrap = document.createElement('div')
-    childWrap.className = 'children'
+    childWrap.className = 'file-entry-children'
     for(const cid of node.children){
       childWrap.appendChild(renderNode(store.nodes.get(cid)))
     }
@@ -156,44 +139,61 @@ function renderNode(node){
 }
 
 function renderBreadcrumbs(){
-  const out = document.getElementById('breadcrumbs')
-  out.innerHTML = ''
-  if(!store.selected){ out.textContent = 'No tab selected'; return }
-  const path = []
-  let cur = store.nodes.get(store.selected)
-  while(cur){ path.unshift(cur); cur = cur.parent ? store.nodes.get(cur.parent) : null }
-  for(const n of path){
-    const b = document.createElement('button')
-    b.textContent = n.title
-    b.className='btn'
-    b.onclick=()=>{ selectNode(n.id) }
-    out.appendChild(b)
-  }
+  // Zed IDE has no breadcrumbs - they're shown in the tab bar instead
+}
 
-  // show instances if the selected node has a file
-  const instMap = store.instances()
-  const file = store.nodes.get(store.selected).file
-  if(file){
-    const list = instMap.get(file) || []
-    const badge = document.createElement('span')
-    badge.style.marginLeft='8px'
-    badge.style.color='var(--muted)'
-    badge.textContent = `instances: ${list.length}`
-    out.appendChild(badge)
-
-    if(list.length>1){
-      const menu = document.createElement('select')
-      menu.style.marginLeft='8px'
-      for(const id of list){
-        const opt = document.createElement('option')
-        opt.value=id
-        opt.textContent = tracePath(id).join(' > ')
-        menu.appendChild(opt)
-      }
-      menu.onchange = ()=>{ selectNode(menu.value) }
-      out.appendChild(menu)
-    }
+// Render tab bar (open tabs at top)
+function renderTabBar(){
+  const tabList = document.getElementById('tab-list')
+  tabList.innerHTML = ''
+  
+  for(const id of store.rootIds){
+    const node = store.nodes.get(id)
+    const tab = document.createElement('button')
+    tab.className = 'editor-tab'
+    if(store.selected === id) tab.classList.add('active')
+    
+    const icon = document.createElement('span')
+    icon.className = 'tab-icon'
+    icon.textContent = '📄'
+    
+    const label = document.createElement('span')
+    label.textContent = node.title
+    label.style.flex = '1'
+    
+    const closeBtn = document.createElement('span')
+    closeBtn.className = 'tab-close'
+    closeBtn.textContent = '×'
+    closeBtn.onclick = (e)=>{ e.stopPropagation(); if(confirm('Close ' + node.title + '?')) closeNode(id) }
+    
+    tab.appendChild(icon)
+    tab.appendChild(label)
+    tab.appendChild(closeBtn)
+    tab.onclick = ()=>{ selectNode(id) }
+    
+    tabList.appendChild(tab)
   }
+}
+
+// Render editor content based on selected node
+function renderEditorContent(){
+  const content = document.getElementById('editor-content')
+  if(!store.selected){
+    content.innerHTML = '<div class="empty-state"><div class="empty-message">Select a tab to view</div></div>'
+    return
+  }
+  
+  const node = store.nodes.get(store.selected)
+  if(!node) {
+    content.innerHTML = '<div class="empty-state"><div class="empty-message">Tab not found</div></div>'
+    return
+  }
+  
+  let html = `<div><h3>${node.title}</h3><p><strong>File:</strong> ${node.file || 'untitled'}</p>`
+  if(node.currentUrl) html += `<p><strong>URL:</strong> ${node.currentUrl}</p>`
+  html += `<p><strong>ID:</strong> ${node.id}</p></div>`
+  
+  content.innerHTML = html
 }
 
 function tracePath(nodeId){
@@ -205,18 +205,11 @@ function tracePath(nodeId){
 
 function selectNode(id){
   store.selected = id
-  const v = document.getElementById('tab-view')
   const node = store.nodes.get(id)
-  if(!node) { v.textContent = 'No such node'; renderBreadcrumbs(); return }
-
-  // if node.syncedId -> show that it's linked and reflect content from source
-  if(node.syncedId){
-    const src = store.nodes.get(node.syncedId)
-    v.innerHTML = `<div>Synced view of <b>${src.title}</b> (source: ${node.syncedId})</div><div class="meta">file: ${src.file}, url: ${src.currentUrl}</div>`
-  } else {
-    v.innerHTML = `<div>Viewing <b>${node.title}</b></div><div class="meta">file: ${node.file}, url: ${node.currentUrl}</div>`
-  }
-  renderBreadcrumbs()
+  if(!node) return
+  
+  renderTabBar()
+  renderEditorContent()
 }
 
 function navigateNode(nodeId, url){
@@ -312,79 +305,88 @@ window.addEventListener('keydown', (e)=>{
   }
 })
 
-// Search modal functions
+// Search modal functions (command palette)
 function openSearchModal(){
-  const modal = document.getElementById('search-modal')
-  const input = document.getElementById('search-input')
+  const modal = document.getElementById('command-palette')
+  const backdrop = document.getElementById('command-backdrop')
+  const input = document.getElementById('command-input')
   modal.classList.remove('hidden')
+  backdrop.classList.remove('hidden')
   input.focus()
   input.value = ''
   renderSearchResults('')
 }
 
 function closeSearchModal(){
-  const modal = document.getElementById('search-modal')
+  const modal = document.getElementById('command-palette')
+  const backdrop = document.getElementById('command-backdrop')
   modal.classList.add('hidden')
+  backdrop.classList.add('hidden')
 }
 
 function renderSearchResults(query){
-  const results = document.getElementById('search-results')
+  const results = document.getElementById('command-results')
   results.innerHTML = ''
   
   if(!query.trim()){
     // Show recent tabs
     const recent = Array.from(store.rootIds).slice(0, 10).map(id => store.nodes.get(id))
+    if(recent.length === 0){
+      const empty = document.createElement('div')
+      empty.className = 'results-placeholder'
+      empty.textContent = 'No tabs yet'
+      results.appendChild(empty)
+      return
+    }
     for(const node of recent){
-      const item = createSearchResultItem(node, 'Recent')
+      const item = createSearchResultItem(node)
       results.appendChild(item)
     }
     return
   }
 
-  // Search through all nodes
+  // Search through all tabs
   const q = query.toLowerCase()
   const matches = []
-  for(const [id, node] of store.nodes){
+  for(const id of store.rootIds){
+    const node = store.nodes.get(id)
     if(node.title.toLowerCase().includes(q) || (node.file && node.file.toLowerCase().includes(q))){
       matches.push(node)
     }
   }
 
-  for(const node of matches.slice(0, 20)){
-    const item = createSearchResultItem(node, 'Tab')
-    results.appendChild(item)
-  }
-
   if(matches.length === 0){
     const noResult = document.createElement('div')
-    noResult.style.padding = '20px'
-    noResult.style.textAlign = 'center'
-    noResult.style.color = 'var(--muted)'
+    noResult.className = 'results-placeholder'
     noResult.textContent = 'No matches found'
     results.appendChild(noResult)
+    return
+  }
+
+  for(const node of matches.slice(0, 20)){
+    const item = createSearchResultItem(node)
+    results.appendChild(item)
   }
 }
 
-function createSearchResultItem(node, type){
+function createSearchResultItem(node){
   const item = document.createElement('div')
-  item.className = 'search-result-item'
+  item.className = 'command-result-item'
   item.onclick = ()=>{ selectNode(node.id); closeSearchModal() }
   
   const left = document.createElement('div')
   const title = document.createElement('div')
-  title.className = 'search-result-title'
+  title.className = 'result-label'
   title.textContent = node.title
   const path = document.createElement('div')
-  path.className = 'search-result-path'
+  path.className = 'result-path'
   path.textContent = node.file || 'untitled'
   left.appendChild(title)
   left.appendChild(path)
   
   const badge = document.createElement('span')
-  badge.style.fontSize = '11px'
-  badge.style.color = 'var(--muted)'
-  badge.style.marginLeft = 'auto'
-  badge.textContent = type
+  badge.className = 'result-badge'
+  badge.textContent = 'Tab'
   
   item.appendChild(left)
   item.appendChild(badge)
@@ -393,14 +395,12 @@ function createSearchResultItem(node, type){
 
 // Search input handler
 window.addEventListener('load', ()=>{
-  const searchInput = document.getElementById('search-input')
+  const searchInput = document.getElementById('command-input')
   searchInput.addEventListener('input', (e)=>{ renderSearchResults(e.target.value) })
 })
 
 // initial demo content + load persisted
 window.addEventListener('load', async ()=>{
-  document.getElementById('add-root').onclick = ()=>{ const t=prompt('title','New Tab'); if(t) { createRoot(t,'/file'+Math.floor(Math.random()*10)); schedulePersist(); } }
-
   // try backend load first
   let loaded = null
   if(window.BrowserAPI && window.BrowserAPI.loadStateFromBackend){
@@ -414,20 +414,17 @@ window.addEventListener('load', async ()=>{
   } else {
     const a = createRoot('Home','/home.txt')
     const b = createRoot('Docs','/docs/readme.md')
-    createChild(a.id,'Child A1','/home.txt')
-    createChild(a.id,'Child A2','/other.md')
-    // create a sync duplicate of a under root
-    syncLinkNode(a.id,null)
+    const c = createRoot('Browse','/web.html')
     renderTree()
     schedulePersist()
   }
 
   // Sidebar toggle
-  const sidebarToggle = document.getElementById('sidebar-toggle')
+  const sidebarToggle = document.getElementById('sidebar-toggle-btn')
   const sidebar = document.getElementById('sidebar')
-  sidebarToggle.onclick = ()=>{ sidebar.classList.toggle('sidebar-collapsed') }
+  sidebarToggle.onclick = ()=>{ sidebar.classList.toggle('collapsed') }
 
-  // Search modal close on outside click
-  const searchModal = document.getElementById('search-modal')
-  searchModal.addEventListener('click', (e)=>{ if(e.target === searchModal) closeSearchModal() })
+  // Command palette close on outside click
+  const cmdBackdrop = document.getElementById('command-backdrop')
+  cmdBackdrop.addEventListener('click', ()=>{ closeSearchModal() })
 })
