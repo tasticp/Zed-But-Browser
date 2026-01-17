@@ -79,32 +79,112 @@ Use cases:
   - Tab entries are lightweight DOM nodes with small controls.
   - Active tab shows a breadcrumb history area (last N history entries) for quick navigation.
   - The sidebar uses a virtualizable layout (the current implementation is ready to be extended with virtualization to handle thousands of tabs with minimal DOM cost).
-- The browsing core uses a single iframe/WebView reused across tabs to keep RAM low. Tab state (history, title, URL) is stored in the Rust backend.
 
 ## Development
 
-- `bun run dev` - Start development server with hot reload (Tauri dev wrapper).
-- `bun run build` - Build the production application (Tauri build).
-- `bun run tauri` - Run Tauri CLI commands.
 
 Backend development tips:
-- New Tauri commands were added. See `src-tauri/src/`:
-  - `browser.rs` — tab/bookmark commands
-  - `adblock.rs` — ad-block rules and matching
-  - `search_index.rs` — local search index
-- Keep rules and index files small to preserve low memory usage.
+ The browsing core uses a single iframe/WebView reused across tabs to keep RAM low. Tab state (history, title, URL) is stored in the Rust backend.
+
+## Installation & Setup
+
+### Prerequisites
+
+- Rust (stable) — install via `rustup`.
+- Node.js or Bun — this repo's examples use `bun`; `npm`/`yarn` are acceptable alternatives.
+- Tauri platform build tools. On Windows install Visual Studio Build Tools and the WebView2 runtime.
+
+### Quick start (Unix / macOS)
+
+```bash
+# install frontend deps (bun)
+bun install
+
+# start dev server with Tauri dev wrapper
+bun run dev
+```
+
+### Quick start (Windows / PowerShell)
+
+1. Install Visual Studio Build Tools and WebView2 runtime (see Microsoft documentation).
+2. From repository root (PowerShell):
+
+```powershell
+# install deps (bun)
+bun install
+
+# start development
+bun run dev
+```
+
+If you do not have `bun`, use `npm install` and `npm run dev` / `npm run build` as appropriate.
+
+### Build (production)
+
+```bash
+bun run build
+```
+
+### Run tests
+
+```bash
+# Rust backend tests
+cargo test --manifest-path src-tauri/Cargo.toml
+
+# Frontend tests (if configured)
+bun test
+```
+
+### Local upstream sync (what the GitHub Action does)
+
+Unix/macOS (requires `rsync`):
+
+```bash
+rm -rf tmp_zed
+git clone --depth 1 https://github.com/zed-industries/zed.git tmp_zed
+rsync -a --delete tmp_zed/ vendor/zed/
+rm -rf vendor/zed/.git
+git add vendor/zed
+git commit -m "chore(sync): update vendor/zed from zed-industries/zed"
+git push
+```
+
+PowerShell (Windows) alternative using `robocopy`:
+
+```powershell
+Remove-Item -Recurse -Force tmp_zed -ErrorAction SilentlyContinue
+git clone --depth 1 https://github.com/zed-industries/zed.git tmp_zed
+robocopy tmp_zed vendor\zed /mir
+Remove-Item -Recurse -Force vendor\zed\.git
+git add vendor/zed
+git commit -m "chore(sync): update vendor/zed from zed-industries/zed"
+git push
+```
+
+### Trigger GitHub Action manually
+
+Open the repository on GitHub → Actions → `Sync upstream zed` workflow → Run workflow (choose branch). The workflow also runs daily via cron.
+
+### Notes
+
+- The sync updates only `vendor/zed` in this repository and never pushes to `zed-industries/zed`.
+- To use a different sync strategy (subtree/submodule), adapt the workflow as needed.
+
+
+## Engine selection & mobile notes
+
+- This project persists a preferred browsing engine (e.g., `webkit`, `edge`, `chromium`, `ladybird`) in the Tauri config via `get_config` / `set_config` commands exposed by the `src-tauri` backend. The frontend prototype persists the choice; runtime switching requires platform/runtime support.
+- Desktop availability:
+  - macOS: WKWebView (WebKit)
+  - Windows: WebView2 (Edge)
+  - Linux: WebKitGTK or other native WebView
+  - Chromium-based engines require bundling or a runtime that exposes them.
+  - Ladybird and other alternative engines require platform-specific integration; this repo stores the preference but you must supply a runtime that uses the engine.
+- Mobile (Android/iOS): switching engines on mobile is platform-limited. To support alternative engines on mobile, target platform-specific WebView implementations or embed a separate engine; this typically requires native work and different packaging. See `.github/ISSUES/002-wire-nested-tabs-to-backend.md` for notes.
 
 ## Where to look in the code
-
-- Frontend:
-  - `public/index.html` — app shell and layout
   - `public/browser.js` — UI logic, tab/sidebar glue, adblock UI
   - `public/onboarding.html` — onboarding engine selection
-- Backend (Tauri):
-  - `src-tauri/src/main.rs` — command registration and app bootstrap
-  - `src-tauri/src/browser.rs` — tab/bookmark persistent model and Tauri commands
-  - `src-tauri/src/adblock.rs` — adblock engine and rule management
-  - `src-tauri/src/search_index.rs` — local search index
 - Native/wry path:
   - `src/main.rs` — alternative wry-based binary with request-interception glue examples
 
@@ -118,7 +198,9 @@ Backend development tips:
 
 ## License
 
-GPGL
+APGL
+APACHE
+GPL
 
 ## Upstream sync: vendor/zed
 

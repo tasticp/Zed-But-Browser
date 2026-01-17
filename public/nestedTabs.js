@@ -215,14 +215,76 @@ function selectNode(id){
   renderBreadcrumbs()
 }
 
-// initial demo content
-window.addEventListener('load', ()=>{
-  document.getElementById('add-root').onclick = ()=>{ const t=prompt('title','New Tab'); if(t) createRoot(t,'/file'+Math.floor(Math.random()*10)) }
-  const a = createRoot('Home','/home.txt')
-  const b = createRoot('Docs','/docs/readme.md')
-  createChild(a.id,'Child A1','/home.txt')
-  createChild(a.id,'Child A2','/other.md')
-  // create a sync duplicate of a under root
-  syncLinkNode(a.id,null)
+// persistence helpers (debounced)
+let saveTimer = null
+async function persistState(){
+  if(window.BrowserAPI && window.BrowserAPI.saveStateToBackend){
+    const serial = serializeStore()
+    await window.BrowserAPI.saveStateToBackend(serial)
+  } else {
+    localStorage.setItem('nestedTabsState', JSON.stringify(serializeStore()))
+  }
+}
+
+function schedulePersist(){
+  if(saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(()=>{ persistState() }, 250)
+}
+
+function serializeStore(){
+  const nodes = {}
+  for(const [id,n] of store.nodes) nodes[id] = { id:n.id, title:n.title, file:n.file, parent:n.parent, children:n.children, syncedId:n.syncedId }
+  return { nodes, rootIds: store.rootIds, selected: store.selected }
+}
+
+function loadStore(obj){
+  store.nodes = new Map()
+  for(const id of Object.keys(obj.nodes||{})){
+    const n = obj.nodes[id]
+    const node = new Node(n.id,n.title,n.file,n.parent,n.syncedId)
+    node.children = n.children || []
+    store.nodes.set(id,node)
+  }
+  store.rootIds = obj.rootIds || []
+  store.selected = obj.selected || null
   renderTree()
+}
+
+// keyboard bindings
+window.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey||e.metaKey) && e.key==='t'){
+    e.preventDefault(); const t=prompt('title','New Tab'); if(t) { createRoot(t,'/file'+Math.floor(Math.random()*10)); schedulePersist(); }
+  }
+  if((e.ctrlKey||e.metaKey) && e.key==='w'){
+    e.preventDefault(); if(store.selected) { if(confirm('Close selected?')) { closeNode(store.selected); schedulePersist(); } }
+  }
+  if((e.ctrlKey||e.metaKey) && e.key==='d'){
+    e.preventDefault(); if(store.selected){ duplicateNode(store.selected); schedulePersist(); }
+  }
+})
+
+// initial demo content + load persisted
+window.addEventListener('load', async ()=>{
+  document.getElementById('add-root').onclick = ()=>{ const t=prompt('title','New Tab'); if(t) { createRoot(t,'/file'+Math.floor(Math.random()*10)); schedulePersist(); } }
+
+  // try backend load first
+  let loaded = null
+  if(window.BrowserAPI && window.BrowserAPI.loadStateFromBackend){
+    try{ loaded = await window.BrowserAPI.loadStateFromBackend() }catch(e){ loaded = null }
+  } else {
+    try{ loaded = JSON.parse(localStorage.getItem('nestedTabsState')||'null') }catch(e){ loaded = null }
+  }
+
+  if(loaded && Object.keys(loaded).length){
+    loadStore(loaded)
+  } else {
+    const a = createRoot('Home','/home.txt')
+    const b = createRoot('Docs','/docs/readme.md')
+    createChild(a.id,'Child A1','/home.txt')
+    createChild(a.id,'Child A2','/other.md')
+    // create a sync duplicate of a under root
+    syncLinkNode(a.id,null)
+    renderTree()
+    schedulePersist()
+  }
 })
