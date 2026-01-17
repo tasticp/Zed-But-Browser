@@ -1,0 +1,13 @@
+{
+  "name": "zed-but-browser",
+  "version": "0.0.1",
+  "description": "A Zed-inspired browser with nested tabs",
+  "main": "public/index.html",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
