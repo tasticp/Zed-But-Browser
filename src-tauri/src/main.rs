@@ -69,6 +69,16 @@ fn main() {
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_os::init())
     .invoke_handler(tauri::generate_handler![read_state, write_state, get_config, set_config])
+    .setup(|app| {
+      #[cfg(debug_assertions)]
+      {
+        let main_window = app.get_webview_window("main");
+        if let Some(window) = main_window {
+          let _ = window.open_devtools();
+        }
+      }
+      Ok(())
+    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

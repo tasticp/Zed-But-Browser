@@ -1,223 +1,154 @@
 ﻿# Zed Inspired Browser
 
-A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. This project is inspired by the Zed editor UI and focuses on power browsing with a minimal memory footprint and a fast, responsive UI.
+> A modern, ultra-lightweight browser built with **Rust and Tauri** that uses your system's native WebView. Inspired by the Zed editor UI.
 
-This repository now includes:
-- A compact Rust/Tauri backend with a small persistent state store for tabs, bookmarks, and preferences.
-- A single-WebView strategy (reused iframe) to minimize memory usage while providing full-featured tab/history management.
-- An integrated, lightweight ad-blocking engine with a small default rule set and runtime rule management.
-- A local, Rust-based full-text search index for offline/local search of indexed pages.
-- A Zed-style left sidebar with breadcrumb-like history crumbs, lightweight animations, and virtualization-ready tab list.
+## 📚 Documentation Hub
 
-## Features (Updated)
+Quick navigation to all guides:
 
-- Zed-inspired UI/UX — Minimal, keyboard-friendly design with a left sidebar for tab navigation and breadcrumb history.
-- Sidebar with Breadcrumb Tabs — Vertical sidebar showing tabs and a compact history breadcrumb for the active tab.
-- Ultra-lightweight — Rust + Tauri, using the system WebView (no bundled Chromium).
-- Memory-optimized tab model — single WebView reused for all tabs to reduce process/memory overhead.
-- Integrated Ad Blocking — Small, fast adblock matcher with persistent rules and a UI for managing rules.
-- Local Full-text Search — Local index (persisted in app data) for indexing and searching page content offline.
-- Cross-platform — Windows, macOS, Linux support via system WebView (WebView2 / WKWebView / WebKitGTK).
-- Fast startup — Minimal initialization and small binary size.
-- Tab management — Open/close/switch tabs with history, persisted in a compact JSON format.
-- Bookmark organization — Foldered bookmarks persisted and accessible via the sidebar.
-- Configurable Browser Engine Identity — Select user-agent identity (Chromium, Firefox, WebKit, Edge) via onboarding or settings.
-- Developer-friendly Tauri commands — Many backend features are exposed as Tauri commands for the frontend to call.
+| Topic | Purpose |
+|-------|---------|
+| **[📖 About](./ABOUT.md)** | What is this project? Features, architecture, and philosophy |
+| **[📦 Installation](./INSTALLATION.md)** | Setup guide for Windows, macOS, and Linux |
+| **[⌨️ Shortcuts](./SHORTCUTS.md)** | Keyboard bindings and pro tips |
+| **[🔧 Development](./README.md#development)** | Contributing, building, and extending |
 
-## What’s new (technical changes)
+## Features
 
-New backend modules (Tauri):
-- `src-tauri/src/browser.rs` — Persistent, compact tab/bookmark state and commands:
-  - Commands exposed: `list_tabs`, `open_tab`, `close_tab`, `switch_tab`, `navigate_tab`, `tab_go_back`, `tab_go_forward`, `get_active_tab`, `list_bookmark_folders`, `add_bookmark`, `remove_bookmark`, `toggle_folder`, `get_preferences`, `ensure_at_least_one_tab`, and more.
-  - State persisted in `browser_state.json` inside the app data directory.
-- `src-tauri/src/adblock.rs` — Lightweight ad-block matcher and rule manager:
-  - Commands exposed: `should_block_url`, `list_rules`, `add_rule`, `remove_rule`, `reset_to_default_rules`, `reload_rules`.
-  - Default small curated rule-set included; rules are persisted to `adblock_rules.json`.
-  - Designed for low-memory and fast substring/domain matching; suitable to call from request interception hooks.
-- `src-tauri/src/search_index.rs` — Local search index:
-  - Commands exposed: `index_page`, `remove_document`, `search`, `get_document`, `rebuild_index`, `index_count`.
-  - Stores a compact inverted index in `search_index.json`. Uses simple tokenization and TF-IDF-like scoring to return relevant pages.
+**Key highlights:**
+- 🎨 Zed-inspired sidebar with breadcrumb tabs
+- 🚀 Ultra-lightweight Rust + Tauri with system WebView (no bundled Chromium)
+- 💾 Memory-optimized single-WebView across all tabs
+- 🛡️ Integrated ad-blocking with runtime rule management
+- 🔍 Local full-text search for offline page indexing
+- 🌐 Cross-platform: Windows, macOS, Linux
+- ⌨️ **[Learn keyboard shortcuts →](./SHORTCUTS.md)**
 
-Frontend changes:
-- `public/browser.js` updated to integrate with Tauri commands:
-  - Sidebar with tab list and breadcrumb history (lightweight DOM + virtualization-ready structure).
-  - Omnibox uses `build_search_url` backend command so the selected engine affects search URLs.
-  - Settings panel now includes ad-block rules UI (list, add, remove, reset).
-- `public/index.html` markup/CSS updated to host the sidebar and breadcrumbs while keeping the UI minimal and responsive.
-
-Wry (native) path:
-- The wry-based binary (`src/main.rs`) includes minimal IPC glue and shows how to add request interception hooks. For full ad-blocking at the native/webview level, use the platform-specific request hook to call `should_block_url` to decide whether to block a resource request.
-
-## Ad Blocking (how it works now)
-
-- The ad-blocker uses a compact set of domain/substring/wildcard rules and runs in the Tauri backend.
-- Rules are persisted in the app data directory (`adblock_rules.json`).
-- The frontend provides a small UI to inspect/add/remove/reset rules (Settings → Ad Block Rules).
-- To actually block requests early, the platform-specific request interceptor should invoke the `should_block_url` command and, if true, return an empty/403 response for that request. The repository contains a minimal example of how to add such a hook in the wry path; for the Tauri path, add request interception and call `should_block_url` in your native hook.
-
-Example rule operations (frontend calls backend via Tauri invoke):
-- List rules: `invoke('list_rules')`
-- Add rule: `invoke('add_rule', { kind: 'Domain', pattern: 'doubleclick.net' })`
-- Remove rule: `invoke('remove_rule', { kind: 'Domain', pattern: 'doubleclick.net' })`
-- Reset to defaults: `invoke('reset_to_default_rules')`
-
-## Local search (how to use)
-
-- Index a page:
-  - `invoke('index_page', { url: 'https://example.com', title: 'Example', content: '...' })`
-- Search:
-  - `invoke('search', { query: 'example search', limit: 10 })`
-- The local index is persisted to `search_index.json` in the app data directory.
-
-Use cases:
-- Offline search of previously visited or user-indexed pages.
-- Fast, private lookups without remote dependencies.
-
-## UI notes
-
-- The left sidebar provides a compact, Zed-inspired style:
-  - Tab entries are lightweight DOM nodes with small controls.
-  - Active tab shows a breadcrumb history area (last N history entries) for quick navigation.
-  - The sidebar uses a virtualizable layout (the current implementation is ready to be extended with virtualization to handle thousands of tabs with minimal DOM cost).
-
-## Development
-
-
-Backend development tips:
- The browsing core uses a single iframe/WebView reused across tabs to keep RAM low. Tab state (history, title, URL) is stored in the Rust backend.
+See **[📖 About](./ABOUT.md)** for detailed feature comparison and architecture overview.
 
 ## Installation & Setup
 
-### Prerequisites
+**👉 [Full installation guide →](./INSTALLATION.md)**
 
-- Rust (stable) — install via `rustup`.
-- Node.js or Bun — this repo's examples use `bun`; `npm`/`yarn` are acceptable alternatives.
-- Tauri platform build tools. On Windows install Visual Studio Build Tools and the WebView2 runtime.
-
-### Quick start (Unix / macOS)
+### Quick start (all platforms)
 
 ```bash
-# install frontend deps (bun)
+# Install dependencies
 bun install
+# or: npm install
 
-# start dev server with Tauri dev wrapper
+# Start development
 bun run dev
+# or: npm run dev
 ```
 
-### Quick start (Windows / PowerShell)
-
-1. Install Visual Studio Build Tools and WebView2 runtime (see Microsoft documentation).
-2. From repository root (PowerShell):
-
-```powershell
-# install deps (bun)
-bun install
-
-# start development
-bun run dev
-```
-
-If you do not have `bun`, use `npm install` and `npm run dev` / `npm run build` as appropriate.
-
-### Build (production)
+### Build for production
 
 ```bash
 bun run build
+# or: npm run build
 ```
+
+### Requirements
+
+- Rust (stable) — install via [rustup](https://rustup.rs)
+- Node.js or Bun
+- Platform-specific build tools:
+  - **Windows**: Visual Studio Build Tools + WebView2 runtime
+  - **macOS**: Xcode Command Line Tools
+  - **Linux**: GCC/Clang + WebView development libraries
+
+See [INSTALLATION.md](./INSTALLATION.md) for detailed setup instructions per platform.
+
+## Development
+
+### Architecture
+
+- **Backend**: Tauri v2.9.5 with Rust core handling state, persistence, and commands
+- **Frontend**: Vanilla JavaScript with localStorage persistence
+- **Build**: Cargo with target directory external to OneDrive (avoids file locks)
+- **Dev Server**: Python HTTP server (port 3000) for hot-reload
+
+### Key files
+
+- `src-tauri/src/main.rs` — Tauri window setup and command routing
+- `src-tauri/Cargo.toml` — Rust dependencies and build configuration
+- `public/index.html` — UI markup with sidebar and breadcrumbs
+- `public/nestedTabs.js` — Tab model, persistence, keyboard bindings
+- `public/browser.js` — Tauri IPC glue and state management
+- `public/styles.css` — Zed-inspired styling
 
 ### Run tests
 
 ```bash
-# Rust backend tests
 cargo test --manifest-path src-tauri/Cargo.toml
-
-# Frontend tests (if configured)
-bun test
 ```
 
-### Local upstream sync (what the GitHub Action does)
+### Commands
 
-Unix/macOS (requires `rsync`):
+All core browser features are exposed as Tauri commands from the backend:
+- Tab management: `list_tabs`, `open_tab`, `close_tab`, `switch_tab`, `navigate_tab`, `tab_go_back`, `tab_go_forward`
+- Bookmarks: `list_bookmark_folders`, `add_bookmark`, `remove_bookmark`
+- Ad-blocking: `list_rules`, `add_rule`, `remove_rule`, `reset_to_default_rules`, `should_block_url`
+- Search: `index_page`, `search`, `rebuild_index`
+- Configuration: `get_config`, `set_config`
+
+See [ABOUT.md](./ABOUT.md) for detailed command documentation and architecture.
+
+## Upstream Zed Sync
+
+This repository keeps a copy of the [Zed editor](https://github.com/zed-industries/zed) in `vendor/zed` and syncs it automatically via GitHub Actions daily (or on-demand).
+
+**Why?** To maintain an independent reference copy without pushing changes back to upstream.
+
+**How:** The sync workflow clones the upstream repo, updates `vendor/zed`, and commits changes to this repository.
+
+To manually sync:
 
 ```bash
+# Unix/macOS
 rm -rf tmp_zed
 git clone --depth 1 https://github.com/zed-industries/zed.git tmp_zed
 rsync -a --delete tmp_zed/ vendor/zed/
 rm -rf vendor/zed/.git
 git add vendor/zed
-git commit -m "chore(sync): update vendor/zed from zed-industries/zed"
+git commit -m "chore(sync): update vendor/zed from upstream"
 git push
 ```
 
-PowerShell (Windows) alternative using `robocopy`:
-
 ```powershell
+# Windows
 Remove-Item -Recurse -Force tmp_zed -ErrorAction SilentlyContinue
 git clone --depth 1 https://github.com/zed-industries/zed.git tmp_zed
 robocopy tmp_zed vendor\zed /mir
 Remove-Item -Recurse -Force vendor\zed\.git
 git add vendor/zed
-git commit -m "chore(sync): update vendor/zed from zed-industries/zed"
+git commit -m "chore(sync): update vendor/zed from upstream"
 git push
 ```
 
-### Trigger GitHub Action manually
+To trigger the workflow manually: GitHub → Actions → `Sync upstream zed` → Run workflow.
 
-Open the repository on GitHub → Actions → `Sync upstream zed` workflow → Run workflow (choose branch). The workflow also runs daily via cron.
+## Contributing
 
-### Notes
+Contributions are welcome! Areas for enhancement:
+- **Request interception**: Implement `should_block_url` in native layer for true ad-blocking
+- **UI polish**: Match Zed editor styling more closely
+- **Virtualization**: Lazy-load tabs for very large tab lists
+- **Search improvements**: Implement BM25 ranking for better relevance
+- **Mobile support**: Add iOS/Android builds with platform-specific WebView integration
 
-- The sync updates only `vendor/zed` in this repository and never pushes to `zed-industries/zed`.
-- To use a different sync strategy (subtree/submodule), adapt the workflow as needed.
-
-
-## Engine selection & mobile notes
-
-- This project persists a preferred browsing engine (e.g., `webkit`, `edge`, `chromium`, `ladybird`) in the Tauri config via `get_config` / `set_config` commands exposed by the `src-tauri` backend. The frontend prototype persists the choice; runtime switching requires platform/runtime support.
-- Desktop availability:
-  - macOS: WKWebView (WebKit)
-  - Windows: WebView2 (Edge)
-  - Linux: WebKitGTK or other native WebView
-  - Chromium-based engines require bundling or a runtime that exposes them.
-  - Ladybird and other alternative engines require platform-specific integration; this repo stores the preference but you must supply a runtime that uses the engine.
-- Mobile (Android/iOS): switching engines on mobile is platform-limited. To support alternative engines on mobile, target platform-specific WebView implementations or embed a separate engine; this typically requires native work and different packaging. See `.github/ISSUES/002-wire-nested-tabs-to-backend.md` for notes.
-
-## Where to look in the code
-  - `public/browser.js` — UI logic, tab/sidebar glue, adblock UI
-  - `public/onboarding.html` — onboarding engine selection
-- Native/wry path:
-  - `src/main.rs` — alternative wry-based binary with request-interception glue examples
-
-## Next steps / suggestions
-
-- Improve ad-block rule matching performance with Aho-Corasick for large rule sets (optional).
-- Add request interception in the Tauri/wry native layer that calls `should_block_url` for each resource request to block early.
-- Improve visuals of the sidebar to match Zed editor more closely (fine-grained styling and animations).
-- Implement virtualization (lazy rendering) in the sidebar for very large tab lists; the current structure is prepared for it.
-- Expand the local search index with more sophisticated ranking (e.g., BM25) if needed.
+See [ABOUT.md](./ABOUT.md#next-steps) for the full roadmap.
 
 ## License
 
-APGL
-APACHE
-GPL
+This project is dual-licensed:
+- **AGPL-3.0** — See LICENSE-AGPL
+- **Apache-2.0** — See LICENSE-APACHE
+- **GPL-3.0** — See LICENSE-GPL
 
-## Upstream sync: vendor/zed
+Choose the license that best fits your use case.
 
-- **What:** This repository keeps a copy of `https://github.com/zed-industries/zed` inside `vendor/zed` and automatically syncs it on a schedule (or on-demand via the Actions UI).
-- **Why:** keep an independent copy inside this project without pushing changes back to the upstream project.
-- **How it works:** a GitHub Actions workflow clones the upstream repo, rsyncs its contents into `vendor/zed` (removing `tmp_zed/.git`), commits any changes to this repository, and pushes them. The workflow runs daily and can be triggered manually.
+---
 
-Notes:
-- This sync only updates files inside `vendor/zed` in this repository; it never pushes to `zed-industries/zed`.
-- If you prefer a subtree/submodule strategy, you can change the workflow to use `git subtree` or submodules, but the current approach keeps history in this repository's commits.
-
-Local clone:
-- A local clone of upstream was also created at `vendor/zed/` for local development convenience. The GitHub Action will update that directory on the remote repository when it detects upstream changes.
-
-Security:
-- The workflow uses the repository token to push commits back to this repo. No secrets for upstream access are required for public repositories.
-
-Next steps (UI features):
-- Implement nested tabs (tabs inside tabs) and multi-instance file locations. This is a larger UI/architecture change; see the new issue/plan in the repo for details.
-- Mobile support plan and conditional builds: see `.github/ISSUES/003-mobile-support-plan.md`.
+**Questions?** Check [INSTALLATION.md](./INSTALLATION.md) for setup help or [SHORTCUTS.md](./SHORTCUTS.md) for keyboard tips. Found a bug? Open an issue!

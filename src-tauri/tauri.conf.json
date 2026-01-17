@@ -4,12 +4,25 @@
   "version": "0.0.1",
   "identifier": "com.tasticp.zedbutbrowser",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": "python -m http.server 3000 --directory ../public",
     "beforeBuildCommand": "",
     "frontendDist": "../public"
   },
   "bundle": {
     "active": false,
     "targets": "all"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Zed But Browser",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
   }
 }
