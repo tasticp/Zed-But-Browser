@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::Manager;
+use tauri::{AppHandle, Manager, WebviewUrl, WindowUrl};
 
 #[tauri::command]
 async fn go_back(window: tauri::Window) -> Result<(), String> {
@@ -35,6 +35,34 @@ async fn navigate(window: tauri::Window, url: String) -> Result<(), String> {
     webview.eval(&script).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn open_window(app: AppHandle) -> Result<(), String> {
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        "secondary",
+        tauri::WebviewUrl::App("index.html".into())
+    )
+    .title("Zed Browser")
+    .width(1200.0)
+    .height(800.0)
+    .min_width(800.0)
+    .min_height(600.0)
+    .resizable(true)
+    .decorations(true)
+    .build()
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn toggle_devtools(window: tauri::Window) -> Result<(), String> {
+    let webview = window
+        .get_webview_window("main")
+        .ok_or("No webview found")?;
+    let _ = webview.open_devtools();
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -42,7 +70,9 @@ fn main() {
             go_back,
             go_forward,
             reload_page,
-            navigate
+            navigate,
+            open_window,
+            toggle_devtools
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
