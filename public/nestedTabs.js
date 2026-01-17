@@ -7,6 +7,8 @@ class Node {
     this.parent = parent
     this.children = []
     this.syncedId = syncedId // if set, shares state with another node id
+    this.history = [] // array of URLs, current is last
+    this.currentUrl = null
   }
 }
 
@@ -208,11 +210,48 @@ function selectNode(id){
 
   // if node.syncedId -> show that it's linked and reflect content from source
   if(node.syncedId){
-    v.innerHTML = `<div>Synced view of <b>${node.title}</b> (source: ${node.syncedId})</div><div class="meta">file: ${node.file}</div>`
+    const src = store.nodes.get(node.syncedId)
+    v.innerHTML = `<div>Synced view of <b>${src.title}</b> (source: ${node.syncedId})</div><div class="meta">file: ${src.file}, url: ${src.currentUrl}</div>`
   } else {
-    v.innerHTML = `<div>Viewing <b>${node.title}</b></div><div class="meta">file: ${node.file}</div>`
+    v.innerHTML = `<div>Viewing <b>${node.title}</b></div><div class="meta">file: ${node.file}, url: ${node.currentUrl}</div>`
   }
   renderBreadcrumbs()
+}
+
+function navigateNode(nodeId, url){
+  const node = store.nodes.get(nodeId)
+  if(!node) return
+  if(node.history.length === 0 || node.history[node.history.length-1] !== url){
+    node.history.push(url)
+  }
+  node.currentUrl = url
+  // If synced, propagate to all synced nodes
+  if(node.syncedId){
+    const src = store.nodes.get(node.syncedId)
+    if(src){
+      src.history = [...node.history]
+      src.currentUrl = url
+      // Update all other synced views
+      for(const [id, n] of store.nodes){
+        if(n.syncedId === node.syncedId && id !== nodeId){
+          n.history = [...src.history]
+          n.currentUrl = url
+        }
+      }
+    }
+  } else {
+    // Propagate to synced children
+    for(const [id, n] of store.nodes){
+      if(n.syncedId === nodeId){
+        n.history = [...node.history]
+        n.currentUrl = url
+      }
+    }
+  }
+  if(store.selected === nodeId || store.nodes.get(store.selected)?.syncedId === nodeId){
+    selectNode(store.selected)
+  }
+  schedulePersist()
 }
 
 // persistence helpers (debounced)
@@ -233,7 +272,7 @@ function schedulePersist(){
 
 function serializeStore(){
   const nodes = {}
-  for(const [id,n] of store.nodes) nodes[id] = { id:n.id, title:n.title, file:n.file, parent:n.parent, children:n.children, syncedId:n.syncedId }
+  for(const [id,n] of store.nodes) nodes[id] = { id:n.id, title:n.title, file:n.file, parent:n.parent, children:n.children, syncedId:n.syncedId, history:n.history, currentUrl:n.currentUrl }
   return { nodes, rootIds: store.rootIds, selected: store.selected }
 }
 
@@ -243,6 +282,8 @@ function loadStore(obj){
     const n = obj.nodes[id]
     const node = new Node(n.id,n.title,n.file,n.parent,n.syncedId)
     node.children = n.children || []
+    node.history = n.history || []
+    node.currentUrl = n.currentUrl || null
     store.nodes.set(id,node)
   }
   store.rootIds = obj.rootIds || []

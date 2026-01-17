@@ -41,3 +41,11 @@ const BrowserAPI = {
 }
 
 window.BrowserAPI = BrowserAPI
+
+// Engine selector wiring
+window.addEventListener('load', async ()=>{
+  const select = document.getElementById('engine-select')
+  const current = await getConfig('preferred_engine') || 'webkit'
+  select.value = current
+  select.onchange = async ()=>{ await setConfig('preferred_engine', select.value) }
+})

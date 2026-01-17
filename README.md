@@ -220,3 +220,4 @@ Security:
 
 Next steps (UI features):
 - Implement nested tabs (tabs inside tabs) and multi-instance file locations. This is a larger UI/architecture change; see the new issue/plan in the repo for details.
+- Mobile support plan and conditional builds: see `.github/ISSUES/003-mobile-support-plan.md`.
