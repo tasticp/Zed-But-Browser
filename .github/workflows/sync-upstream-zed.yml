@@ -1,0 +1,42 @@
+name: Sync upstream zed
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Clone upstream zed
+        run: |
+          rm -rf tmp_zed
+          git clone --depth 1 https://github.com/zed-industries/zed.git tmp_zed
+
+      - name: Sync into vendor/zed
+        run: |
+          mkdir -p vendor/zed
+          rsync -a --delete tmp_zed/ vendor/zed/
+          rm -rf vendor/zed/.git
+
+      - name: Commit and push changes
+        run: |
+          git add vendor/zed
+          if git diff --staged --quiet; then
+            echo "No changes to vendor/zed"
+          else
+            git commit -m "chore(sync): update vendor/zed from zed-industries/zed"
+            git push
+          fi

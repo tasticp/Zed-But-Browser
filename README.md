@@ -119,3 +119,22 @@ Backend development tips:
 ## License
 
 GPGL
+
+## Upstream sync: vendor/zed
+
+- **What:** This repository keeps a copy of `https://github.com/zed-industries/zed` inside `vendor/zed` and automatically syncs it on a schedule (or on-demand via the Actions UI).
+- **Why:** keep an independent copy inside this project without pushing changes back to the upstream project.
+- **How it works:** a GitHub Actions workflow clones the upstream repo, rsyncs its contents into `vendor/zed` (removing `tmp_zed/.git`), commits any changes to this repository, and pushes them. The workflow runs daily and can be triggered manually.
+
+Notes:
+- This sync only updates files inside `vendor/zed` in this repository; it never pushes to `zed-industries/zed`.
+- If you prefer a subtree/submodule strategy, you can change the workflow to use `git subtree` or submodules, but the current approach keeps history in this repository's commits.
+
+Local clone:
+- A local clone of upstream was also created at `vendor/zed/` for local development convenience. The GitHub Action will update that directory on the remote repository when it detects upstream changes.
+
+Security:
+- The workflow uses the repository token to push commits back to this repo. No secrets for upstream access are required for public repositories.
+
+Next steps (UI features):
+- Implement nested tabs (tabs inside tabs) and multi-instance file locations. This is a larger UI/architecture change; see the new issue/plan in the repo for details.

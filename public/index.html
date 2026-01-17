@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zed-But-Browser — Nested Tabs Prototype</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <button id="add-root">+ New Tab</button>
+      </div>
+      <div id="tree"></div>
+    </aside>
+    <main id="main">
+      <div id="breadcrumbs"></div>
+      <div id="content">
+        <div id="tab-view">Select a tab to view its content.</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="nestedTabs.js"></script>
+  <script src="browser.js"></script>
+</body>
+</html>
