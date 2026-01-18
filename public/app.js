@@ -1,446 +1,628 @@
 // Zed Browser - Main Application Script
-// Clean, working implementation based on Zed design principles
+// Intelligent merge: class structure with functional state management and performance optimizations
 
-class ZedBrowser {
-    constructor() {
-        this.tabs = [];
-        this.activeTabId = null;
-        this.tabIdCounter = 0;
-        this.webview = null;
-        this.maxTabs = 50;
-        this.bookmarks = [];
-        
-        this.init();
-    }
+(async () => {
+  const { invoke } = window.__TAURI__ || {};
 
-    init() {
-        console.log('🚀 Initializing Zed Browser...');
-        
-        // Get DOM elements
-        this.elements = {
-            tabBar: document.getElementById('tab-bar'),
-            urlInput: document.getElementById('url-input'),
-            webviewContainer: document.getElementById('webview-container'),
-            startPage: document.getElementById('start-page'),
-            searchInput: document.getElementById('search-input'),
-            searchBtn: document.getElementById('search-btn'),
-            newTabBtn: document.getElementById('new-tab-btn'),
-            sidebarTabs: document.getElementById('sidebar-tabs'),
-            sidebarBookmarks: document.getElementById('sidebar-bookmarks'),
-            statusUrl: document.getElementById('status-url'),
-            statusTabs: document.getElementById('status-tabs'),
-            statusTime: document.getElementById('status-time'),
-            shortcuts: document.querySelectorAll('.shortcut')
-        };
-        
-        // Initialize event listeners
-        this.initEventListeners();
-        
-        // Create initial tab
-        this.createNewTab();
-        
-        // Update time
-        this.updateTime();
-        setInterval(() => this.updateTime(), 1000);
-        
-        console.log('✅ Zed Browser initialized successfully');
-    }
+  // Performance: Cache DOM queries and event handlers
+  const cache = {
+    elements: {},
+    lastRender: 0,
+    renderThrottle: 16, // ~60fps
+  };
 
-    initEventListeners() {
-        // New tab button
-        this.elements.newTabBtn.addEventListener('click', () => this.createNewTab());
-        
-        // URL input
-        this.elements.urlInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.navigate(this.elements.urlInput.value);
-            }
-        });
-        
-        // Search
-        this.elements.searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.navigate(this.elements.searchInput.value);
-            }
-        });
-        
-        this.elements.searchBtn.addEventListener('click', () => {
-            this.navigate(this.elements.searchInput.value);
-        });
-        
-        // Shortcut buttons
-        this.elements.shortcuts.forEach(shortcut => {
-            shortcut.addEventListener('click', () => {
-                const url = shortcut.getAttribute('data-url');
-                this.navigate(url);
-            });
-        });
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 't') {
-                e.preventDefault();
-                this.createNewTab();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'w' && this.activeTabId) {
-                e.preventDefault();
-                this.closeTab(this.activeTabId);
-            }
-            if (e.key === 'F5') {
-                e.preventDefault();
-                this.reload();
-            }
-            if (e.key === 'F6' || (e.ctrlKey && e.key === 'l')) {
-                e.preventDefault();
-                this.elements.urlInput.focus();
-                this.elements.urlInput.select();
-            }
-        });
-        
-        // Title bar controls (decorative for now)
-        document.querySelector('.title-bar-close')?.addEventListener('click', () => {
-            if (window.__TAURI__) {
-                window.__TAURI__.window.getCurrent().close();
-            }
-        });
-    }
+  // State management
+  const state = {
+    tabs: [],
+    activeTabId: null,
+    tabIdCounter: 1,
+    bookmarks: [],
+    history: [],
+    downloads: [],
+    settings: {
+      homepage: "about:blank",
+      searchEngine: "google",
+      homeUrl: "https://www.google.com",
+    },
+  };
 
-    createNewTab(url = null, title = 'New Tab') {
-        if (this.tabs.length >= this.maxTabs) {
-            console.warn('Maximum number of tabs reached');
-            return null;
+  // DOM elements (cached)
+  const elements = {
+    tabBar: document.getElementById("tab-bar"),
+    urlInput: document.getElementById("url-input"),
+    webviewContainer: document.getElementById("webview-container"),
+    startPage: document.getElementById("start-page"),
+    searchInput: document.getElementById("search-input"),
+    searchBtn: document.getElementById("search-btn"),
+    newTabBtn: document.getElementById("new-tab-btn"),
+    sidebarTabs: document.getElementById("sidebar-tabs"),
+    sidebarBookmarks: document.getElementById("sidebar-bookmarks"),
+    statusUrl: document.getElementById("status-url"),
+    statusTabs: document.getElementById("status-tabs"),
+    statusTime: document.getElementById("status-time"),
+    shortcuts: document.querySelectorAll(".shortcut"),
+    bookmarksList: document.getElementById("bookmarks-list"),
+    historyList: document.getElementById("history-list"),
+    navBack: document.getElementById("nav-back"),
+    navForward: document.getElementById("nav-forward"),
+    navReload: document.getElementById("nav-reload"),
+    sidebarToggle: document.getElementById("sidebar-toggle"),
+    sidebar: document.getElementById("sidebar"),
+    downloadsPanel: document.getElementById("downloads-panel"),
+    downloadsList: document.getElementById("downloads-list"),
+    closeDownloads: document.getElementById("close-downloads"),
+    menuDropdown: document.getElementById("menu-dropdown"),
+    menuBtn: document.getElementById("menu-btn"),
+    bookmarkBtn: document.getElementById("bookmark-btn"),
+    webview: document.getElementById("webview"),
+  };
+
+  // ============ State Management ============
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem("zed-browser-state");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state.tabs = parsed.tabs || [];
+        state.bookmarks = parsed.bookmarks || [];
+        state.history = parsed.history || [];
+        state.downloads = parsed.downloads || [];
+        state.settings = { ...state.settings, ...parsed.settings };
+        state.tabIdCounter = parsed.tabIdCounter || 1;
+        if (state.tabs.length > 0) {
+          state.activeTabId = parsed.activeTabId || state.tabs[0].id;
         }
-        
-        const tabId = 'tab-' + this.tabIdCounter++;
-        const tab = {
-            id: tabId,
-            url: url,
-            title: title,
-            created: new Date()
-        };
-        
-        this.tabs.push(tab);
-        this.renderTab(tab);
-        this.renderSidebarItem(tab);
-        
-        // Set as active if it's first tab or if specified
-        if (!this.activeTabId || url) {
-            this.switchToTab(tabId);
-        }
-        
-        this.updateStatus();
-        return tab;
+      }
+    } catch (e) {
+      console.error("Failed to load state:", e);
+    }
+  }
+
+  function saveState() {
+    try {
+      const toSave = {
+        tabs: state.tabs,
+        bookmarks: state.bookmarks,
+        history: state.history,
+        downloads: state.downloads,
+        settings: state.settings,
+        tabIdCounter: state.tabIdCounter,
+        activeTabId: state.activeTabId,
+      };
+      localStorage.setItem("zed-browser-state", JSON.stringify(toSave));
+    } catch (e) {
+      console.error("Failed to save state:", e);
+    }
+  }
+
+  // ============ Tab Management ============
+
+  function createTab(url = null, title = "New Tab") {
+    const id = "tab-" + state.tabIdCounter++;
+    const tab = {
+      id,
+      url: url || "",
+      title,
+      favicon: null,
+      pinned: false,
+      createdAt: Date.now(),
+    };
+    state.tabs.push(tab);
+    if (!state.activeTabId) {
+      state.activeTabId = id;
+    }
+    renderTabs();
+    renderBookmarks();
+    renderHistory();
+    saveState();
+    return tab;
+  }
+
+  function closeTab(id) {
+    const index = state.tabs.findIndex((t) => t.id === id);
+    if (index === -1) return;
+
+    state.tabs.splice(index, 1);
+
+    if (state.activeTabId === id) {
+      if (state.tabs.length > 0) {
+        state.activeTabId =
+          state.tabs[Math.min(index, state.tabs.length - 1)].id;
+      } else {
+        state.activeTabId = null;
+      }
     }
 
-    switchToTab(tabId) {
-        const tab = this.tabs.find(t => t.id === tabId);
-        if (!tab) return;
-        
-        this.activeTabId = tabId;
-        
-        // Update UI
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.querySelector('[data-tab-id="' + tabId + '"]')?.classList.add('active');
-        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-        document.querySelector('[data-sidebar-tab-id="' + tabId + '"]')?.classList.add('active');
-        
-        // Update URL input
-        this.elements.urlInput.value = tab.url || '';
-        
-        // Load webview or show start page
-        if (tab.url) {
-            this.loadWebview(tab.url);
-        } else {
-            this.showStartPage();
-        }
-        
-        this.updateStatus();
+    renderTabs();
+    renderBookmarks();
+    renderHistory();
+    updateWebview();
+    saveState();
+  }
+
+  function duplicateTab(id) {
+    const tab = state.tabs.find((t) => t.id === id);
+    if (!tab) return;
+    createTab(tab.url, tab.title);
+  }
+
+  function setActiveTab(id) {
+    state.activeTabId = id;
+    const tab = state.tabs.find((t) => t.id === id);
+    if (tab) {
+      elements.urlInput.value = tab.url || "";
+      renderTabs();
+      updateWebview();
+      saveState();
+    }
+  }
+
+  function togglePinTab(id) {
+    const tab = state.tabs.find((t) => t.id === id);
+    if (tab) {
+      tab.pinned = !tab.pinned;
+      renderTabs();
+      saveState();
+    }
+  }
+
+  // ============ Navigation ============
+
+  function navigate(urlInput) {
+    if (!state.activeTabId) return;
+
+    let finalUrl = urlInput.trim();
+
+    if (!finalUrl) return;
+
+    // Handle search queries
+    if (!finalUrl.includes(".") && !finalUrl.startsWith("http")) {
+      const engine =
+        {
+          google: "https://www.google.com/search?q=",
+          bing: "https://www.bing.com/search?q=",
+          duckduckgo: "https://duckduckgo.com/?q=",
+        }[state.settings.searchEngine] || "https://www.google.com/search?q=";
+      finalUrl = engine + encodeURIComponent(finalUrl);
     }
 
-    closeTab(tabId) {
-        const tabIndex = this.tabs.findIndex(t => t.id === tabId);
-        if (tabIndex === -1) return;
-        
-        this.tabs.splice(tabIndex, 1);
-        
-        // Remove from UI
-        document.querySelector('[data-tab-id="' + tabId + '"]')?.remove();
-        document.querySelector('[data-sidebar-tab-id="' + tabId + '"]')?.remove();
-        
-        // Handle active tab
-        if (this.activeTabId === tabId) {
-            if (this.tabs.length > 0) {
-                const newActiveIndex = Math.min(tabIndex, this.tabs.length - 1);
-                this.switchToTab(this.tabs[newActiveIndex].id);
-            } else {
-                this.activeTabId = null;
-                this.showStartPage();
-            }
-        }
-        
-        // Clear webview if no tabs
-        if (this.tabs.length === 0) {
-            this.clearWebview();
-        }
-        
-        this.updateStatus();
+    // Add protocol if missing
+    if (
+      !finalUrl.startsWith("http://") &&
+      !finalUrl.startsWith("https://") &&
+      !finalUrl.startsWith("about:")
+    ) {
+      finalUrl = "https://" + finalUrl;
     }
 
-    navigate(url) {
-        if (!url || url.trim().length === 0) {
-            return;
+    const tab = state.tabs.find((t) => t.id === state.activeTabId);
+    if (tab) {
+      tab.url = finalUrl;
+      tab.title = "Loading...";
+      addToHistory(finalUrl, "Page");
+      renderTabs();
+      renderBookmarks();
+      updateWebview();
+      saveState();
+    }
+  }
+
+  function updateWebview() {
+    const tab = state.tabs.find((t) => t.id === state.activeTabId);
+    if (tab && elements.webview) {
+      elements.webview.src = tab.url || "about:blank";
+      if (elements.statusUrl) {
+        elements.statusUrl.textContent = tab.url || "about:blank";
+      }
+    }
+  }
+
+  // ============ History & Bookmarks ============
+
+  function addToHistory(url, title = "Page") {
+    const existing = state.history.find((h) => h.url === url);
+
+    if (existing) {
+      existing.count = (existing.count || 1) + 1;
+      existing.lastVisited = Date.now();
+    } else {
+      state.history.push({
+        url,
+        title,
+        count: 1,
+        lastVisited: Date.now(),
+        timestamp: Date.now(),
+        favicon: null,
+      });
+    }
+
+    if (state.history.length > 100) {
+      state.history = state.history.slice(-100);
+    }
+
+    renderHistory();
+    saveState();
+  }
+
+  function addBookmark(url, title, icon) {
+    const tab = state.tabs.find((t) => t.id === state.activeTabId);
+    const existing = state.bookmarks.find((b) => b.url === url);
+
+    if (!existing && tab) {
+      state.bookmarks.push({
+        url: url || tab.url,
+        title: title || tab.title || "Bookmark",
+        icon: icon || tab.favicon,
+        createdAt: Date.now(),
+      });
+      renderBookmarks();
+      saveState();
+      console.log("✅ Bookmark added");
+    }
+  }
+
+  function removeBookmark(url) {
+    const index = state.bookmarks.findIndex((b) => b.url === url);
+    if (index !== -1) {
+      state.bookmarks.splice(index, 1);
+      renderBookmarks();
+      saveState();
+    }
+  }
+
+  // ============ Navigation Controls ============
+
+  function goBack() {
+    // Simplified back navigation
+    const currentIndex = state.history.findIndex(
+      (h) => h.url === state.tabs.find((t) => t.id === state.activeTabId)?.url,
+    );
+    if (currentIndex > 0) {
+      navigate(state.history[currentIndex - 1].url);
+    }
+  }
+
+  function goForward() {
+    // Simplified forward navigation
+    const currentIndex = state.history.findIndex(
+      (h) => h.url === state.tabs.find((t) => t.id === state.activeTabId)?.url,
+    );
+    if (currentIndex < state.history.length - 1) {
+      navigate(state.history[currentIndex + 1].url);
+    }
+  }
+
+  function reload() {
+    const tab = state.tabs.find((t) => t.id === state.activeTabId);
+    if (tab && tab.url) {
+      tab.title = "Reloading...";
+      renderTabs();
+      updateWebview();
+    }
+  }
+
+  // ============ Rendering ============
+
+  function renderTabs() {
+    const now = Date.now();
+    if (now - cache.lastRender < cache.renderThrottle) return;
+    cache.lastRender = now;
+
+    if (!elements.tabBar) return;
+
+    const fragment = document.createDocumentFragment();
+
+    state.tabs.forEach((tab) => {
+      const el = document.createElement("div");
+      el.className = "tab" + (tab.id === state.activeTabId ? " active" : "");
+      el.innerHTML = `
+        <div class="tab-content">
+          ${tab.favicon ? `<img src="${tab.favicon}" class="tab-favicon">` : '<span class="tab-icon">📄</span>'}
+          <span class="tab-title">${tab.title || "New Tab"}</span>
+        </div>
+        <button class="tab-close">×</button>
+      `;
+
+      el.addEventListener("click", () => setActiveTab(tab.id));
+      el.querySelector(".tab-close").addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeTab(tab.id);
+      });
+
+      fragment.appendChild(el);
+    });
+
+    elements.tabBar.innerHTML = "";
+    elements.tabBar.appendChild(fragment);
+  }
+
+  function renderBookmarks() {
+    if (!elements.sidebarBookmarks) return;
+
+    const fragment = document.createDocumentFragment();
+    const currentTabUrl = state.tabs.find(
+      (t) => t.id === state.activeTabId,
+    )?.url;
+
+    state.bookmarks.forEach((bookmark) => {
+      const el = document.createElement("div");
+      el.className =
+        "sidebar-item" + (bookmark.url === currentTabUrl ? " active" : "");
+      el.innerHTML = `
+        <a href="#" class="bookmark-link">
+          ${bookmark.icon ? `<img src="${bookmark.icon}" class="item-icon">` : "⭐"}
+          <span>${bookmark.title}</span>
+        </a>
+      `;
+
+      el.querySelector(".bookmark-link").addEventListener("click", (e) => {
+        e.preventDefault();
+        navigate(bookmark.url);
+      });
+
+      fragment.appendChild(el);
+    });
+
+    elements.sidebarBookmarks.innerHTML = "";
+    elements.sidebarBookmarks.appendChild(fragment);
+  }
+
+  function renderHistory() {
+    if (!elements.historyList) return;
+
+    const fragment = document.createDocumentFragment();
+    const recent = state.history.slice(-20).reverse();
+    const currentTabUrl = state.tabs.find(
+      (t) => t.id === state.activeTabId,
+    )?.url;
+
+    recent.forEach((item) => {
+      const el = document.createElement("div");
+      el.className =
+        "history-item" + (item.url === currentTabUrl ? " active" : "");
+
+      const time = new Date(item.timestamp || item.lastVisited);
+      const timeStr = {
+        hour: time.getHours().toString().padStart(2, "0"),
+        minute: time.getMinutes().toString().padStart(2, "0"),
+      };
+
+      el.innerHTML = `
+        <a href="#" class="history-link">
+          ${item.favicon ? `<img src="${item.favicon}" class="item-icon">` : "🔗"}
+          <div class="history-content">
+            <span class="history-title">${item.title}</span>
+            <span class="history-url">${new URL(item.url).hostname}</span>
+          </div>
+          <span class="history-time">${timeStr.hour}:${timeStr.minute}</span>
+        </a>
+      `;
+
+      el.querySelector(".history-link").addEventListener("click", (e) => {
+        e.preventDefault();
+        navigate(item.url);
+      });
+
+      fragment.appendChild(el);
+    });
+
+    elements.historyList.innerHTML = "";
+    elements.historyList.appendChild(fragment);
+  }
+
+  function renderDownloads() {
+    if (!elements.downloadsList) return;
+
+    const el = elements.downloadsList;
+    el.innerHTML = "";
+
+    if (state.downloads.length === 0) {
+      el.innerHTML =
+        '<div style="padding: 1rem; color: var(--text-secondary);">No downloads yet</div>';
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    state.downloads.forEach((download) => {
+      const item = document.createElement("div");
+      item.className = "download-item";
+      item.innerHTML = `
+        <span class="download-name">${download.name}</span>
+        <span class="download-size">${download.size}</span>
+      `;
+      fragment.appendChild(item);
+    });
+
+    el.appendChild(fragment);
+  }
+
+  // ============ UI Controls ============
+
+  function toggleDownloads() {
+    if (elements.downloadsPanel) {
+      elements.downloadsPanel.style.display =
+        elements.downloadsPanel.style.display === "none" ? "block" : "none";
+      renderDownloads();
+    }
+  }
+
+  function toggleMenu() {
+    if (elements.menuDropdown) {
+      elements.menuDropdown.style.display =
+        elements.menuDropdown.style.display === "none" ? "block" : "none";
+    }
+  }
+
+  function handleMenuAction(action) {
+    switch (action) {
+      case "settings":
+        console.log("Open settings");
+        break;
+      case "history":
+        console.log("Show history");
+        break;
+      case "bookmarks":
+        console.log("Show bookmarks");
+        break;
+      case "downloads":
+        toggleDownloads();
+        break;
+    }
+  }
+
+  // ============ Event Listeners ============
+
+  function initEventListeners() {
+    // New tab
+    if (elements.newTabBtn) {
+      elements.newTabBtn.addEventListener("click", () => createTab());
+    }
+
+    // URL input
+    if (elements.urlInput) {
+      elements.urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          navigate(elements.urlInput.value);
         }
-        
-        let finalUrl = url.trim();
-        
-        // Validate and process URL
-        if (!this.isValidUrl(finalUrl)) {
-            // If not a valid URL, treat as search
-            finalUrl = 'https://www.google.com/search?q=' + encodeURIComponent(finalUrl);
-        } else if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-            // Auto-add https if missing
-            finalUrl = 'https://' + finalUrl;
+      });
+    }
+
+    // Search
+    if (elements.searchInput) {
+      elements.searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          navigate(elements.searchInput.value);
         }
-        
-        // Security check
-        if (!this.isSecureUrl(finalUrl)) {
-            console.warn('Blocked potentially dangerous URL:', finalUrl);
-            this.showError('Blocked: URL not allowed for security reasons');
-            return;
-        }
-        
-        // Update or create tab
-        if (this.activeTabId) {
-            const activeTab = this.tabs.find(t => t.id === this.activeTabId);
-            if (activeTab) {
-                activeTab.url = finalUrl;
-                this.elements.urlInput.value = finalUrl;
-                this.updateTabTitle(this.activeTabId, finalUrl);
-            }
-        } else {
-            this.createNewTab(finalUrl, 'Loading...');
-        }
-        
-        // Load webview
-        this.loadWebview(finalUrl);
+      });
     }
 
-    loadWebview(url) {
-        // Clear existing webview
-        this.clearWebview();
-        
-        // Hide start page
-        this.elements.startPage.style.display = 'none';
-        
-        // Create new webview
-        this.webview = document.createElement('webview');
-        this.webview.style.width = '100%';
-        this.webview.style.height = '100%';
-        this.webview.style.border = 'none';
-        this.webview.src = url;
-        
-        // Security attributes
-        this.webview.setAttribute('allowpopups', 'false');
-        this.webview.setAttribute('nodeintegration', 'false');
-        this.webview.setAttribute('webSecurity', 'true');
-        
-        // Event listeners
-        this.webview.addEventListener('dom-ready', () => {
-            console.log('Webview loaded:', url);
-            this.updateStatus('Loaded: ' + new URL(url).hostname);
-        });
-        
-        this.webview.addEventListener('page-title-updated', (e) => {
-            this.updateTabTitle(this.activeTabId, e.title || 'Untitled');
-        });
-        
-        this.webview.addEventListener('did-fail-load', (e) => {
-            console.error('Failed to load:', e);
-            this.showError('Failed to load page');
-            this.showStartPage();
-        });
-        
-        this.elements.webviewContainer.appendChild(this.webview);
+    if (elements.searchBtn) {
+      elements.searchBtn.addEventListener("click", () => {
+        navigate(elements.searchInput.value);
+      });
     }
 
-    clearWebview() {
-        if (this.webview) {
-            this.elements.webviewContainer.removeChild(this.webview);
-            this.webview = null;
-        }
+    // Shortcuts
+    elements.shortcuts?.forEach((shortcut) => {
+      shortcut.addEventListener("click", () => {
+        const url = shortcut.getAttribute("data-url");
+        navigate(url);
+      });
+    });
+
+    // Navigation buttons
+    if (elements.navBack) {
+      elements.navBack.addEventListener("click", goBack);
+    }
+    if (elements.navForward) {
+      elements.navForward.addEventListener("click", goForward);
+    }
+    if (elements.navReload) {
+      elements.navReload.addEventListener("click", reload);
     }
 
-    showStartPage() {
-        this.clearWebview();
-        this.elements.startPage.style.display = 'flex';
-        this.updateStatus('Ready');
+    // Menu
+    if (elements.menuBtn) {
+      elements.menuBtn.addEventListener("click", toggleMenu);
     }
 
-    reload() {
-        if (this.webview) {
-            this.webview.reload();
-        }
-    }
-
-    renderTab(tab) {
-        const tabElement = document.createElement('button');
-        tabElement.className = 'tab';
-        tabElement.setAttribute('data-tab-id', tab.id);
-        
-        tabElement.innerHTML = '<span class="tab-title">' + tab.title + '</span><span class="tab-close">×</span>';
-        
-        tabElement.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('tab-close')) {
-                this.switchToTab(tab.id);
-            }
-        });
-        
-        tabElement.querySelector('.tab-close').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.closeTab(tab.id);
-        });
-        
-        // Insert before new tab button
-        const newTabBtn = document.getElementById('new-tab-btn');
-        this.elements.tabBar.insertBefore(tabElement, newTabBtn);
-    }
-
-    renderSidebarItem(tab) {
-        const sidebarItem = document.createElement('div');
-        sidebarItem.className = 'sidebar-item';
-        sidebarItem.setAttribute('data-sidebar-tab-id', tab.id);
-        sidebarItem.innerHTML = '📄 ' + tab.title;
-        
-        sidebarItem.addEventListener('click', () => {
-            this.switchToTab(tab.id);
-        });
-        
-        this.elements.sidebarTabs.appendChild(sidebarItem);
-    }
-
-    updateTabTitle(tabId, title) {
-        const tab = this.tabs.find(t => t.id === tabId);
+    // Bookmark button
+    if (elements.bookmarkBtn) {
+      elements.bookmarkBtn.addEventListener("click", () => {
+        const tab = state.tabs.find((t) => t.id === state.activeTabId);
         if (tab) {
-            tab.title = title;
-            
-            // Update tab element
-            const tabElement = document.querySelector('[data-tab-id="' + tabId + '"] .tab-title');
-            if (tabElement) {
-                tabElement.textContent = title;
-            }
-            
-            // Update sidebar element
-            const sidebarElement = document.querySelector('[data-sidebar-tab-id="' + tabId + '"]');
-            if (sidebarElement) {
-                sidebarElement.innerHTML = '📄 ' + title;
-            }
+          addBookmark(tab.url, tab.title);
         }
+      });
     }
 
-    isValidUrl(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch (_) {
-            // Check if it's a domain-like string (e.g., "google.com")
-            return /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(string);
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      // Ctrl/Cmd + T: New tab
+      if ((e.ctrlKey || e.metaKey) && e.key === "t") {
+        e.preventDefault();
+        createTab();
+      }
+      // Ctrl/Cmd + W: Close tab
+      if ((e.ctrlKey || e.metaKey) && e.key === "w" && state.activeTabId) {
+        e.preventDefault();
+        closeTab(state.activeTabId);
+      }
+      // F5: Reload
+      if (e.key === "F5") {
+        e.preventDefault();
+        reload();
+      }
+      // F6 or Ctrl/Cmd + L: Focus URL bar
+      if (e.key === "F6" || (e.ctrlKey && e.key === "l")) {
+        e.preventDefault();
+        if (elements.urlInput) {
+          elements.urlInput.focus();
+          elements.urlInput.select();
         }
-    }
+      }
+    });
 
-    isSecureUrl(url) {
-        const lowerUrl = url.toLowerCase();
-        const dangerousSchemes = [
-            'javascript:', 'data:', 'vbscript:', 'file:', 'ftp:',
-            'chrome:', 'chrome-extension:', 'moz-extension:', 'edge:', 'opera:',
-            'mailto:', 'tel:', 'sms:'
-        ];
-        
-        for (const scheme of dangerousSchemes) {
-            if (lowerUrl.startsWith(scheme)) {
-                return false;
-            }
+    // Sidebar toggle
+    if (elements.sidebarToggle) {
+      elements.sidebarToggle.addEventListener("click", () => {
+        if (elements.sidebar) {
+          elements.sidebar.classList.toggle("hidden");
         }
-        
-        return true;
+      });
     }
 
-    showError(message) {
-        console.error(message);
-        // Flash URL input border red
-        this.elements.urlInput.style.borderColor = 'var(--danger)';
-        setTimeout(() => {
-            this.elements.urlInput.style.borderColor = '';
-        }, 2000);
-        
-        // Update status
-        this.updateStatus('Error: ' + message);
-        setTimeout(() => {
-            this.updateStatus('Ready');
-        }, 3000);
+    // Close downloads
+    if (elements.closeDownloads) {
+      elements.closeDownloads.addEventListener("click", toggleDownloads);
+    }
+  }
+
+  function updateTime() {
+    if (elements.statusTime) {
+      const now = new Date();
+      elements.statusTime.textContent = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    }
+  }
+
+  function updateTabCount() {
+    if (elements.statusTabs) {
+      elements.statusTabs.textContent = `${state.tabs.length} tab${state.tabs.length !== 1 ? "s" : ""}`;
+    }
+  }
+
+  // ============ Initialization ============
+
+  async function init() {
+    console.log("🚀 Initializing Zed Browser...");
+
+    loadState();
+    initEventListeners();
+
+    // Create initial tab if none exist
+    if (state.tabs.length === 0) {
+      createTab(state.settings.homeUrl, "Home");
     }
 
-    updateStatus(message) {
-        this.elements.statusUrl.textContent = message || 'Ready';
-    }
+    // Initial render
+    renderTabs();
+    renderBookmarks();
+    renderHistory();
+    updateWebview();
+    updateTime();
+    updateTabCount();
 
-    updateTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true 
-        });
-        this.elements.statusTime.textContent = timeString;
-    }
-}
+    // Update time every second
+    setInterval(updateTime, 1000);
 
-// Initialize browser when DOM is loaded
-let zedBrowser;
-document.addEventListener('DOMContentLoaded', () => {
-    zedBrowser = new ZedBrowser();
-});
+    console.log("✅ Zed Browser initialized successfully");
+  }
 
-// Test utilities
-window.zedBrowserTests = {
-    testNavigation: function() {
-        console.log('🧪 Testing navigation...');
-        const testUrls = [
-            'https://google.com',
-            'github.com',
-            'test search',
-            'javascript:alert(1)',
-            ''
-        ];
-        
-        testUrls.forEach((url, index) => {
-            setTimeout(() => {
-                console.log('Test ' + (index + 1) + ': ' + url);
-                zedBrowser.navigate(url);
-            }, index * 1000);
-        });
-    },
-    
-    testTabs: function() {
-        console.log('🧪 Testing tab management...');
-        zedBrowser.createNewTab('https://example.com', 'Example');
-        zedBrowser.createNewTab('https://github.com', 'GitHub');
-        
-        setTimeout(() => {
-            zedBrowser.switchToTab('tab-1');
-            setTimeout(() => {
-                zedBrowser.closeTab('tab-2');
-            }, 1000);
-        }, 1000);
-    },
-    
-    runAllTests: function() {
-        console.log('🚀 Running all tests...');
-        this.testNavigation();
-        setTimeout(() => this.testTabs(), 5000);
-    }
-};
-
-console.log('Zed Browser loaded. Available tests:');
-console.log('- zedBrowserTests.testNavigation()');
-console.log('- zedBrowserTests.testTabs()');
-console.log('- zedBrowserTests.runAllTests()');
+  // Start the application
+  await init();
+})();
