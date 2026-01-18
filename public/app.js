@@ -1,5 +1,12 @@
 (async () => {
   const { invoke } = window.__TAURI__ || {};
+  
+  // Performance: Cache DOM queries and event handlers
+  const cache = {
+    elements: {},
+    lastRender: 0,
+    renderThrottle: 16 // ~60fps
+  };
   const webview = document.getElementById('webview');
   const startPage = document.getElementById('start-page');
   
@@ -210,7 +217,14 @@
   }
   
   function renderTabs() {
+    // Throttle rendering for performance
+    const now = Date.now();
+    if (now - cache.lastRender < cache.renderThrottle) return;
+    cache.lastRender = now;
+    
+    const fragment = document.createDocumentFragment();
     elements.tabList.innerHTML = '';
+    
     state.tabs.forEach(tab => {
       const el = document.createElement('button');
       el.className = 'editor-tab' + (tab.id === state.activeTabId ? ' active' : '') + (tab.pinned ? ' pinned' : '');
@@ -225,15 +239,20 @@
         e.stopPropagation();
         closeTab(tab.id);
       };
-      elements.tabList.appendChild(el);
+      fragment.appendChild(el);
     });
+    
+    elements.tabList.appendChild(fragment);
   }
   
   function renderBookmarks() {
+    const fragment = document.createDocumentFragment();
     elements.bookmarksList.innerHTML = '';
+    const currentTabUrl = state.tabs.find(t => t.id === state.activeTabId)?.url;
+    
     state.bookmarks.forEach(bm => {
       const el = document.createElement('div');
-      el.className = 'bookmark-item' + (bm.url === (state.tabs.find(t => t.id === state.activeTabId)?.url) ? ' active' : '');
+      el.className = 'bookmark-item' + (bm.url === currentTabUrl ? ' active' : '');
       el.innerHTML = `
         <span class="bookmark-icon">${bm.icon || '★'}</span>
         <span>${bm.title}</span>
@@ -242,16 +261,21 @@
         createTab(bm.url, bm.title);
         navigate(bm.url);
       };
-      elements.bookmarksList.appendChild(el);
+      fragment.appendChild(el);
     });
+    
+    elements.bookmarksList.appendChild(fragment);
   }
   
   function renderHistory() {
+    const fragment = document.createDocumentFragment();
     elements.historyList.innerHTML = '';
     const recent = state.history.slice(0, 50);
+    const currentTabUrl = state.tabs.find(t => t.id === state.activeTabId)?.url;
+    
     recent.forEach(h => {
       const el = document.createElement('div');
-      el.className = 'history-item' + (h.url === (state.tabs.find(t => t.id === state.activeTabId)?.url) ? ' active' : '');
+      el.className = 'history-item' + (h.url === currentTabUrl ? ' active' : '');
       const time = new Date(h.timestamp);
       const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       el.innerHTML = `
@@ -263,8 +287,10 @@
         createTab(h.url, h.title);
         navigate(h.url);
       };
-      elements.historyList.appendChild(el);
+      fragment.appendChild(el);
     });
+    
+    elements.historyList.appendChild(fragment);
   }
   
   function addToHistory(url, title = null) {
