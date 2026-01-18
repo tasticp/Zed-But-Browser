@@ -8,114 +8,64 @@
 </head>
 <body>
   <div id="app" class="zed-app">
-    <nav class="zed-menu-bar">
-      <div class="menu-item" data-action="file">File</div>
-      <div class="menu-item" data-action="edit">Edit</div>
-      <div class="menu-item" data-action="view">View</div>
-      <div class="menu-item" data-action="goto">Go</div>
-      <div class="menu-item" data-action="window">Window</div>
-      <div class="menu-item" data-action="help">Help</div>
-    </nav>
+    <div class="zed-menu-bar">
+      <div class="menu-item">File</div>
+      <div class="menu-item">Edit</div>
+      <div class="menu-item">View</div>
+      <div class="menu-item">Go</div>
+      <div class="menu-item">Help</div>
+    </div>
     <div class="zed-layout">
-      <aside id="sidebar" class="zed-sidebar">
+      <aside class="zed-sidebar">
         <div class="sidebar-header">
           <div class="sidebar-title">BROWSER</div>
-          <button id="sidebar-toggle" class="sidebar-btn">⊟</button>
         </div>
         <div class="sidebar-section">
-          <div class="sidebar-section-title">BOOKMARKS</div>
-          <div id="bookmarks-list" class="bookmarks-list"></div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">HISTORY</div>
-          <div id="history-list" class="history-list"></div>
+          <div class="sidebar-section-title">TABS</div>
+          <div id="tab-tree" class="tab-tree"></div>
         </div>
       </aside>
       <div class="zed-editor-area">
         <div class="zed-tab-bar">
           <div id="tab-list" class="tab-list"></div>
-          <button id="new-tab-btn" class="new-tab-btn" title="New Tab">+</button>
+          <button id="new-tab-btn" class="new-tab-btn">+</button>
           <div class="tab-bar-spacer"></div>
         </div>
         <div class="zed-editor-pane">
-          <div id="url-bar-container" class="url-bar-container">
-            <div class="url-bar-controls">
-              <button id="nav-back" class="url-btn" title="Back">←</button>
-              <button id="nav-forward" class="url-btn" title="Forward">→</button>
-              <button id="nav-reload" class="url-btn" title="Reload">⟳</button>
-            </div>
-            <input type="text" id="url-input" class="url-input" placeholder="Enter URL or search..." autocomplete="off">
-            <div class="url-bar-actions">
-              <button id="bookmark-btn" class="url-btn" title="Add Bookmark">★</button>
-              <button id="downloads-btn" class="url-btn" title="Downloads">↓</button>
-              <button id="menu-btn" class="url-btn" title="Menu">☰</button>
-            </div>
+          <div class="url-bar-container">
+            <input type="text" id="url-input" class="url-input" placeholder="Enter URL or search...">
           </div>
           <div id="webview-container" class="webview-container">
             <div id="start-page" class="start-page">
               <div class="start-logo">ZB</div>
               <h1>Zed Browser</h1>
               <div class="start-search">
-                <input type="text" id="start-search" placeholder="Search the web...">
-                <button id="start-search-btn">Search</button>
+                <input type="text" id="search-input" placeholder="Search the web...">
+                <button id="search-btn">Search</button>
               </div>
               <div class="start-shortcuts">
-                <div class="shortcut-item" data-url="https://github.com">
-                  <span class="shortcut-icon">⎔</span>
-                  <span>GitHub</span>
+                <div class="shortcut-item" onclick="navigate('https://github.com')">
+                  <div class="shortcut-icon">⎔</div>
+                  <div>GitHub</div>
                 </div>
-                <div class="shortcut-item" data-url="https://youtube.com">
-                  <span class="shortcut-icon">▶</span>
-                  <span>YouTube</span>
+                <div class="shortcut-item" onclick="navigate('https://youtube.com')">
+                  <div class="shortcut-icon">▶</div>
+                  <div>YouTube</div>
                 </div>
-                <div class="shortcut-item" data-url="https://reddit.com">
-                  <span class="shortcut-icon">r/</span>
-                  <span>Reddit</span>
+                <div class="shortcut-item" onclick="navigate('https://reddit.com')">
+                  <div class="shortcut-icon">r/</div>
+                  <div>Reddit</div>
                 </div>
-                <div class="shortcut-item" data-url="https://chatgpt.com">
-                  <span class="shortcut-icon">◎</span>
-                  <span>ChatGPT</span>
-                </div>
-                <div class="shortcut-item" data-url="https://mail.google.com">
-                  <span class="shortcut-icon">✉</span>
-                  <span>Gmail</span>
-                </div>
-                <div class="shortcut-item" data-url="https://twitter.com">
-                  <span class="shortcut-icon">𝕏</span>
-                  <span>Twitter</span>
-                </div>
-                <div class="shortcut-item" data-url="https://amazon.com">
-                  <span class="shortcut-icon">◉</span>
-                  <span>Amazon</span>
-                </div>
-                <div class="shortcut-item" data-url="https://wikipedia.org">
-                  <span class="shortcut-icon">W</span>
-                  <span>Wikipedia</span>
+                <div class="shortcut-item" onclick="navigate('https://google.com')">
+                  <div class="shortcut-icon">🔍</div>
+                  <div>Google</div>
                 </div>
               </div>
             </div>
-            <webview id="webview"></webview>
+            <iframe id="webview" style="display:none;"></iframe>
           </div>
         </div>
       </div>
-    </div>
-    <div id="downloads-panel" class="downloads-panel hidden">
-      <div class="downloads-header">
-        <span>Downloads</span>
-        <button id="close-downloads" class="panel-close">×</button>
-      </div>
-      <div id="downloads-list" class="downloads-list"></div>
-    </div>
-    <div id="menu-dropdown" class="menu-dropdown hidden">
-      <div class="menu-dropdown-item" data-action="new-tab">New Tab</div>
-      <div class="menu-dropdown-item" data-action="new-window">New Window</div>
-      <div class="menu-dropdown-divider"></div>
-      <div class="menu-dropdown-item" data-action="bookmarks">Bookmarks</div>
-      <div class="menu-dropdown-item" data-action="history">History</div>
-      <div class="menu-dropdown-item" data-action="downloads">Downloads</div>
-      <div class="menu-dropdown-divider"></div>
-      <div class="menu-dropdown-item" data-action="settings">Settings</div>
-      <div class="menu-dropdown-item" data-action="devtools">Developer Tools</div>
     </div>
   </div>
   <script src="app.js"></script>

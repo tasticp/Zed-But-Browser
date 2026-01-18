@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.zed.browser",
   "build": {
-    "beforeDevCommand": "python -m http.server 3000 --directory ../public",
+    "beforeDevCommand": "",
     "beforeBuildCommand": "",
     "frontendDist": "../public"
   },
@@ -24,10 +24,5 @@
         "fullscreen": false
       }
     ]
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    }
   }
 }
