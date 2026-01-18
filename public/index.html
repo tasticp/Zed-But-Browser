@@ -1,73 +1,496 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zed Browser</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zed Browser</title>
+    <style>
+        /* Zed-inspired color scheme */
+        :root {
+            --background: #0d1117;
+            --surface: #161b22;
+            --panel: #21262d;
+            --border: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --text-muted: #656d76;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+            background: var(--background);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Title bar */
+        .title-bar {
+            height: 32px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            -webkit-app-region: drag;
+        }
+
+        .title-bar-title {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .title-bar-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+
+        .title-bar-close { background: var(--danger); }
+        .title-bar-minimize { background: var(--warning); }
+        .title-bar-maximize { background: var(--success); }
+
+        /* Main layout */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .sidebar-title {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .sidebar-section {
+            padding: 8px 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 6px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            font-size: 12px;
+        }
+
+        .sidebar-item:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Editor area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--background);
+        }
+
+        /* Tab bar */
+        .tab-bar {
+            height: 32px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        .tab {
+            height: 28px;
+            padding: 0 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .tab:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--background);
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .tab-close {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            cursor: pointer;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .new-tab-button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-size: 16px;
+        }
+
+        .new-tab-button:hover {
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .tab-spacer {
+            flex: 1;
+        }
+
+        /* URL bar */
+        .url-bar {
+            padding: 8px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .url-input {
+            width: 100%;
+            height: 32px;
+            padding: 0 16px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        /* Webview container */
+        .webview-container {
+            flex: 1;
+            background: white;
+            position: relative;
+        }
+
+        .start-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-primary);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .start-logo {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .start-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 32px;
+        }
+
+        .start-description {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 600px;
+        }
+
+        .start-search {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+        .start-search-input {
+            flex: 1;
+            height: 40px;
+            padding: 0 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .start-search-button {
+            height: 40px;
+            padding: 0 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .start-search-button:hover {
+            opacity: 0.9;
+        }
+
+        .shortcuts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .shortcut {
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .shortcut:hover {
+            background: var(--panel);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .shortcut-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .shortcut-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .shortcut-url {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Status bar */
+        .status-bar {
+            height: 20px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-item {
+            margin-right: 16px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
 </head>
 <body>
-  <div id="app" class="zed-app">
-    <div class="zed-menu-bar">
-      <div class="menu-item">File</div>
-      <div class="menu-item">Edit</div>
-      <div class="menu-item">View</div>
-      <div class="menu-item">Go</div>
-      <div class="menu-item">Help</div>
-    </div>
-    <div class="zed-layout">
-      <aside class="zed-sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-title">BROWSER</div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">TABS</div>
-          <div id="tab-tree" class="tab-tree"></div>
-        </div>
-      </aside>
-      <div class="zed-editor-area">
-        <div class="zed-tab-bar">
-          <div id="tab-list" class="tab-list"></div>
-          <button id="new-tab-btn" class="new-tab-btn">+</button>
-          <div class="tab-bar-spacer"></div>
-        </div>
-        <div class="zed-editor-pane">
-          <div class="url-bar-container">
-            <input type="text" id="url-input" class="url-input" placeholder="Enter URL or search...">
-          </div>
-          <div id="webview-container" class="webview-container">
-            <div id="start-page" class="start-page">
-              <div class="start-logo">ZB</div>
-              <h1>Zed Browser</h1>
-              <div class="start-search">
-                <input type="text" id="search-input" placeholder="Search the web...">
-                <button id="search-btn">Search</button>
-              </div>
-              <div class="start-shortcuts">
-                <div class="shortcut-item" onclick="navigate('https://github.com')">
-                  <div class="shortcut-icon">⎔</div>
-                  <div>GitHub</div>
-                </div>
-                <div class="shortcut-item" onclick="navigate('https://youtube.com')">
-                  <div class="shortcut-icon">▶</div>
-                  <div>YouTube</div>
-                </div>
-                <div class="shortcut-item" onclick="navigate('https://reddit.com')">
-                  <div class="shortcut-icon">r/</div>
-                  <div>Reddit</div>
-                </div>
-                <div class="shortcut-item" onclick="navigate('https://google.com')">
-                  <div class="shortcut-icon">🔍</div>
-                  <div>Google</div>
-                </div>
-              </div>
+    <div class="app-container">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="title-bar-title">Zed Browser</div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button title-bar-minimize"></button>
+                <button class="title-bar-button title-bar-maximize"></button>
+                <button class="title-bar-button title-bar-close"></button>
             </div>
-            <iframe id="webview" style="display:none;"></iframe>
-          </div>
         </div>
-      </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">Tabs</div>
+                </div>
+                <div class="sidebar-section" id="sidebar-tabs">
+                    <!-- Tabs will be dynamically added here -->
+                </div>
+                <div class="sidebar-header">
+                    <div class="sidebar-title">Bookmarks</div>
+                </div>
+                <div class="sidebar-section" id="sidebar-bookmarks">
+                    <!-- Bookmarks will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <!-- Tab Bar -->
+                <div class="tab-bar" id="tab-bar">
+                    <!-- Tabs will be dynamically added here -->
+                    <button class="new-tab-button" id="new-tab-btn" title="New Tab">+</button>
+                    <div class="tab-spacer"></div>
+                </div>
+
+                <!-- URL Bar -->
+                <div class="url-bar">
+                    <input type="text" class="url-input" id="url-input" placeholder="Enter URL or search...">
+                </div>
+
+                <!-- Webview Container -->
+                <div class="webview-container" id="webview-container">
+                    <!-- Start Page -->
+                    <div class="start-page" id="start-page">
+                        <div class="start-logo">Z</div>
+                        <div class="start-title">Zed Browser</div>
+                        <div class="start-description">A minimal, high-performance browser inspired by Zed editor</div>
+                        <div class="start-search">
+                            <input type="text" class="start-search-input" id="search-input" placeholder="Search the web...">
+                            <button class="start-search-button" id="search-btn">Search</button>
+                        </div>
+                        <div class="shortcuts">
+                            <div class="shortcut" data-url="https://github.com">
+                                <div class="shortcut-icon">⎔</div>
+                                <div class="shortcut-title">GitHub</div>
+                                <div class="shortcut-url">github.com</div>
+                            </div>
+                            <div class="shortcut" data-url="https://google.com">
+                                <div class="shortcut-icon">🔍</div>
+                                <div class="shortcut-title">Google</div>
+                                <div class="shortcut-url">google.com</div>
+                            </div>
+                            <div class="shortcut" data-url="https://stackoverflow.com">
+                                <div class="shortcut-icon">📚</div>
+                                <div class="shortcut-title">Stack Overflow</div>
+                                <div class="shortcut-url">stackoverflow.com</div>
+                            </div>
+                            <div class="shortcut" data-url="https://youtube.com">
+                                <div class="shortcut-icon">▶</div>
+                                <div class="shortcut-title">YouTube</div>
+                                <div class="shortcut-url">youtube.com</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <span class="status-item" id="status-url">Ready</span>
+                    <span class="status-item" id="status-tabs">1 tab</span>
+                    <div class="tab-spacer"></div>
+                    <span class="status-item" id="status-time">12:00 PM</span>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <script src="app.js"></script>
+
+    <script src="app.js"></script>
 </body>
 </html>
